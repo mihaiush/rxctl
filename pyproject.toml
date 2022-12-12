@@ -2,7 +2,7 @@
 name = "rxctl"
 version = "0.0.0"
 description = "Linux remote execution tool"
-authors = ["mihaiush <mihaiush@gmai.com>"]
+authors = ["mihaiush <mihaiush@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
