@@ -1,5 +1,9 @@
 #!/bin/bash -e
 
+if [ $RX_LOG_VERBOSITY -ge 2 ] ; then
+    set -x
+fi
+
 __log.debug "__run: cmd: ${RX_SSH_CMD} ${RX_HOST} ${RX_SUDO_CMD} ${RX_SHELL}"
 
 if [ -n "$1" ] ; then

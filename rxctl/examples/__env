@@ -1,0 +1,11 @@
+#!/bin/bash -e
+
+. __init <<EOF
+Show envvars
+EOF
+
+__log.info Local env
+env | sort | grep RX_
+
+__log.info Remote env
+__run 'env | sort'

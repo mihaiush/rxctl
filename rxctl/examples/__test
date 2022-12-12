@@ -1,0 +1,26 @@
+#!/bin/bash -e
+
+. __init <<EOF
+Test
+
+Test rxctl build-in commands
+EOF
+
+__log.info "__run: \$@ command"
+__run 'hostname ; uname -a'
+
+__log.info "__run: stdin command"
+__run <<EOF
+hostname
+uname -a
+EOF
+
+__log.info "__put"
+__put -r $(pwd) /tmp/test
+
+__log.info "__get"
+__get /tmp/test/environment /tmp/
+
+__log.info "call another task"
+__env
+

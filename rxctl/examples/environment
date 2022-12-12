@@ -1,0 +1,20 @@
+#!/bin/bash -e
+
+CONFIG='{
+    "ssh-opt": "-q -o ControlMaster=auto -o ControlPath=/dev/shm/rx-ssh-%h -o ControlPersist=2m -o ConnectTimeout=5 -o CheckHostIP=no -o StrictHostKeyChecking=no",
+    "password_envvar": "LC_COLLATE"
+}'
+
+
+INVENTORY='{
+    "test": [
+        "test01.local.lan",
+        "test02.local.lan"
+    ]
+}'
+
+if [ "$1" = "config" ] ; then
+    echo $CONFIG | jq -r "."
+elif [ "$1" = "inventory" ] ; then
+    echo $INVENTORY | jq -r ".\"$2\""
+fi
