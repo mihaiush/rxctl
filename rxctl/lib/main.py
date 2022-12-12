@@ -88,8 +88,7 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
         p.align['Task'] = 'r'
         p.align['Description'] = 'l'
         for t in get_tasks():
-            c = subprocess.run('{} __name__'.format(t), shell=True, encoding='utf-8', errors='ignore', bufsize=0, capture_output=True)
-            if c.stdout.strip() == t:
+            if check_task(t):
                 LOG.debug('Add task: {}'.format(t))
                 p.add_row([click.style(t, fg='blue', bold=True), task_doc(t, short=True)])
             else:
@@ -219,6 +218,9 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
         cmd = {}
         for t in tasks:
             if t.startswith('__'):
+                if not check_task(t):
+                    LOG.error('Invalid task: {}'.format(t))
+                    sys.exit(1)
                 if len(cmd) > 0:
                     TASKS.append(cmd)
                 cmd = {'name':t, 'args':''}

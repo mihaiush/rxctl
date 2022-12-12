@@ -45,3 +45,9 @@ def task_doc(task, short=False):
         h = p.stdout
     return h
 
+
+def check_task(t):
+    c = subprocess.run('{} __name__'.format(t), shell=True, encoding='utf-8', errors='ignore', bufsize=0, capture_output=True)
+    if c.stdout.strip() == t:
+        return True
+    return False
