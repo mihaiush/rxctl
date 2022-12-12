@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+__log.debug "__run: cmd: ${RX_SSH_CMD} ${RX_HOST} ${RX_SUDO_CMD} ${RX_SHELL}"
+
+if [ -n "$1" ] ; then
+    cat <(echo "unset ${RX_PASSWD_ENVVAR} ; unset SSHPASS") <(echo "$@")
+else
+    cat <(echo "unset ${RX_PASSWD_ENVVAR} ; unset SSHPASS") /dev/stdin
+fi | ${RX_SSH_CMD} ${RX_HOST} ${RX_SUDO_CMD} ${RX_SHELL}
+

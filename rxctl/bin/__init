@@ -1,0 +1,18 @@
+
+export RX_TASK=$(basename $0)
+
+# Show help
+if [ -z "$RX_HOST" ] ; then
+    if [ "$1" = "__name__" ] ; then
+        echo $RX_TASK
+    else
+        cat
+    fi
+    exit
+fi
+
+if [ ${RX_LOG_VERBOSITY} -ge 2 ] ; then
+    set -x
+fi
+
+__log.info Entering task ${RX_TASK}
