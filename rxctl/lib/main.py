@@ -46,15 +46,17 @@ def get_config(ctx, param, value):
 @click.option('-l', '--task-list', default=False, is_flag=True, help='List tasks in local directory')
 @click.option('-t', '--task-help', default=None, help='Show help for a task')
 @click.option('-w', '--warning-only', default=False, is_flag=True, help="Don't exit if a host fails check, evict host from inventory")
+@click.option('--set-env', default=[], help='Set environment variable (it can be used multiple times)', multiple=True)
 @click.option('-v', '--verbosity', count=True, default=0, help='Verbosity level, up to 3')
 @click.argument('tasks', nargs=-1, type=click.UNPROCESSED)
 @click.pass_context
-def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, ssh_opt, password_envvar, user, parallel, ad_hoc, inventory, check_only, task_list, task_help, warning_only, verbosity, tasks):
+def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, ssh_opt, password_envvar, user, parallel, ad_hoc, inventory, check_only, task_list, task_help, warning_only, set_env, verbosity, tasks):
 
     # Non-configurable parameters
     remote_shell = '/bin/sh'
     passwd_script = 'rx-passwd'
     passwd_code = '#!/bin/bash\necho "${}"\n'.format(password_envvar)
+    cache = '{}/.cache/rx'.format(os.environ['HOME'])
 
     verbosity = min(verbosity, 3)
     os.environ['RX_LOG_VERBOSITY'] = str(verbosity)
@@ -137,6 +139,7 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
         passwd = getpass.getpass('--> {} password : '.format('/'.join(passwd)))
 
     # Build environment
+    os.environ['RX_CACHE'] = cache
     os.environ['RX_SHELL'] = remote_shell
     os.environ['RX_BASEDIR'] = basedir
     os.environ['RX_PASSWD_SCRIPT'] = passwd_script
@@ -159,6 +162,9 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
         os.environ[password_envvar] = passwd
         sudo_cmd = 'SUDO_ASKPASS=./{} sudo -A'.format(passwd_script)
     os.environ['RX_SUDO_CMD'] = sudo_cmd
+    for ev in set_env:
+        ev = ev.split('=')
+        os.environ[ev[0].upper()] = ev[1]
    
     # Check hosts
     def _item(i):

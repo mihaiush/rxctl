@@ -76,20 +76,20 @@ class Logger(logging.Logger):
 
 logging.setLoggerClass(Logger)
 LOG = logging.getLogger(__name__)
-LOG.set_label()
+
+if 'RX_LOG_VERBOSITY' in os.environ and int(os.environ['RX_LOG_VERBOSITY']) > 0:
+    LOG.enable_debug()
+
+if 'RX_HOST' in os.environ:
+    label = os.environ['RX_HOST']
+    if 'RX_TASK' in os.environ:
+        label = '{}/{}'.format(os.environ['RX_HOST'], os.environ['RX_TASK'])
+else:
+    label = None
+LOG.set_label(label)
+
 
 if __name__ == '__main__':
-
-    if 'RX_LOG_VERBOSITY' in os.environ and int(os.environ['RX_LOG_VERBOSITY']) > 0:
-        LOG.enable_debug()
-
-    if 'RX_HOST' in os.environ:
-        label = os.environ['RX_HOST']
-        if 'RX_TASK' in os.environ:
-            label = '{}/{}'.format(os.environ['RX_HOST'], os.environ['RX_TASK'])
-    else:
-        label = None
-    LOG.set_label(label)
 
     levelmap = {
         'debug': logging.DEBUG,
