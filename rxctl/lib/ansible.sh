@@ -21,7 +21,7 @@ bootstrap(){
     RAV=$(__run <<EOF
     mkdir -p ~/.cache/rx
     cd ~/.cache/rx
-    python3 -c "from ansible.release import __version__ ; print(__version__)"
+    python3 -c "from ansible.release import __version__ ; print(__version__)" 2>/dev/null
 EOF
 ) || true
     __log.debug __ansible: bootstrap: Remote ansible version: $RAV
@@ -34,6 +34,11 @@ EOF
         tar -xzf /tmp/ansible.tar.gz
 EOF
     fi   
+    if ! __run 'test -s ~/.cache/rx/ansible/facts.json' ; then
+        __log.info __ansible: bootstrap: Save facts
+        FACTS=$(module setup $(args2json --gather_subset="distribution,pkg_mgr,service_mgr,virtual") | jq -arM '.ansible_facts')
+        __run "echo '$FACTS' > ~/.cache/rx/ansible/facts.json"
+    fi
 }
 
 args2json(){
@@ -41,7 +46,7 @@ args2json(){
     ARGS='{"ANSIBLE_MODULE_ARGS":{'
     STRIP=0
     for A in $@ ; do
-        echo $A | grep -qE '^--.+=.+$' || __log.error __ansible: args2json: Invalid argument: $A
+        echo $A | grep -qE '^--[^ =-]+=[^ =-]+$' || __log.error __ansible: args2json: Invalid argument: $A
         STRIP=1
         read K V < <(echo $A | sed -r 's/^--(.+)=(.+)$/\1 \2/g')
         ARGS="${ARGS}"'"'$K'":"'$V'",'
@@ -87,7 +92,8 @@ case $CMD in
     ;;
     package)
         __log.debug __ansible: cmd: package
-        MGR=$(__ansible.setup | jq -r '.ansible_pkg_mgr')
+        #MGR=$(__ansible.setup | jq -r '.ansible_pkg_mgr')
+        MGR=$(__run 'cat ~/.cache/rx/ansible/facts.json' | jq -r '.ansible_pkg_mgr')
         if check "$1" ; then
             NAME="$1"
             shift
@@ -100,7 +106,8 @@ case $CMD in
     ;;
     service)
         __log.debug __ansible: cmd: service
-        MGR=$(__ansible.setup | jq -r '.ansible_service_mgr')
+        #MGR=$(__ansible.setup | jq -r '.ansible_service_mgr')
+        MGR=$(__run 'cat ~/.cache/rx/ansible/facts.json' | jq -r '.ansible_service_mgr')
         if check "$1" ; then
             NAME="$1"
             shift
