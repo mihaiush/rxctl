@@ -4,11 +4,12 @@ if [ $RX_LOG_VERBOSITY -ge 2 ] ; then
     set -x
 fi
 
-__log.debug "__run: cmd: ${RX_SSH_CMD} ${RX_HOST} ${RX_SUDO_CMD} ${RX_SHELL}"
+CMD="${RX_SSH_CMD} ${RX_HOST} ${RX_SUDO_CMD} ${RX_SHELL}"
+__log.debug "__run: cmd: ${CMD}"
 
 if [ -n "$1" ] ; then
-    cat <(echo "unset ${RX_PASSWD_ENVVAR} ; unset SSHPASS") <(echo "$@")
+    $CMD "-c 'unset ${RX_PASSWD_ENVVAR} ; unset SSHPASS ; $@'"
 else
-    cat <(echo "unset ${RX_PASSWD_ENVVAR} ; unset SSHPASS") /dev/stdin
-fi | ${RX_SSH_CMD} ${RX_HOST} ${RX_SUDO_CMD} ${RX_SHELL}
+    cat <(echo "unset ${RX_PASSWD_ENVVAR} ; unset SSHPASS") /dev/stdin | $CMD
+fi
 

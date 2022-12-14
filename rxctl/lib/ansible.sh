@@ -35,27 +35,25 @@ EOF
 EOF
     fi   
     if ! __run 'test -s ~/.cache/rx/ansible/facts.json' ; then
-        __log.info __ansible: bootstrap: Save facts
-        FACTS=$(module setup $(args2json --gather_subset="distribution,pkg_mgr,service_mgr,virtual") | jq -arM '.ansible_facts')
-        __run "echo '$FACTS' > ~/.cache/rx/ansible/facts.json"
+        __log.info __ansible: bootstrap: Facts
+        module setup --gather_subset="distribution,pkg_mgr,service_mgr,virtual" | jq -arM '.ansible_facts' | __run "cat > ~/.cache/rx/ansible/facts.json"
     fi
 }
 
 args2json(){
     __log.debug __ansible: args2json: raw: $@
-    ARGS='{"ANSIBLE_MODULE_ARGS":{'
+    ARGS='{\"ANSIBLE_MODULE_ARGS\":{'
     STRIP=0
     for A in $@ ; do
-        echo $A | grep -qE '^--[^ =-]+=[^ =-]+$' || __log.error __ansible: args2json: Invalid argument: $A
+        echo $A | grep -qE '^--[^ =]+=[^=]+$' || __log.error __ansible: args2json: Invalid argument: $A
         STRIP=1
         read K V < <(echo $A | sed -r 's/^--(.+)=(.+)$/\1 \2/g')
-        ARGS="${ARGS}"'"'$K'":"'$V'",'
+        ARGS=${ARGS}'\"'$K'\"':'\"'$V'\",'
     done
     if [ $STRIP -eq 1 ] ; then 
         ARGS=${ARGS::-1}
     fi
-    ARGS="${ARGS}"'}}'
-    ARGS="$(echo "$ARGS" | jq -rc)"
+    ARGS=${ARGS}'}}'
     __log.debug __ansible: args2json: json: $ARGS
     echo $ARGS
 }
@@ -65,8 +63,11 @@ check(){
 }
 
 module(){
-    __log.debug __ansible: module: $1 $2
-    __run "cd ~/.cache/rx ; python3 -m ansible.modules.${1} '${2}'" | jq 'del(.invocation)' | jq 'del(.diff)'
+    MODULE=$1
+    shift
+    ARGS="$(args2json $@)"
+    __log.debug __ansible: module: $MODULE $ARGS
+    __run "cd ~/.cache/rx ; python3 -m ansible.modules.${MODULE} ${ARGS}" | jq 'del(.invocation)' | jq 'del(.diff)'
 }
 
 
@@ -122,7 +123,6 @@ case $CMD in
         MODULE=$1
         __log.debug __ansible: raw: $MODULE
         shift
-        ARGS="$(args2json $@)"
-        module $MODULE "$ARGS"
+        module $MODULE "$@"
     ;;
 esac

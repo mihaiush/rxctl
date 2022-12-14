@@ -156,11 +156,11 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
         scp_cmd = 'sshpass -e {}'.format(scp_cmd)
     os.environ['RX_SSH_CMD'] = ssh_cmd
     os.environ['RX_SCP_CMD'] = scp_cmd
-    sudo_cmd = 'sudo'
+    sudo_cmd = 'sudo -u root'
     if use_sudo_password:
         os.environ['RX_SUDO_PASSWORD'] = 'yes'
         os.environ[password_envvar] = passwd
-        sudo_cmd = 'SUDO_ASKPASS=./{} sudo -A'.format(passwd_script)
+        sudo_cmd = 'SUDO_ASKPASS=./{} {} -A'.format(passwd_script, sudo_cmd)
     os.environ['RX_SUDO_CMD'] = sudo_cmd
     for ev in set_env:
         ev = ev.split('=')
