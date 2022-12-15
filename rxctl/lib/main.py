@@ -9,6 +9,7 @@ import subprocess
 import getpass
 import shlex
 from multiprocessing import Pool
+#import types
 
 from prettytable import PrettyTable
 import click
@@ -35,8 +36,8 @@ def get_config(ctx, param, value):
 @click.option('-H', '--host', default=[], help='Comma separated list of host (it can be used multiple times)', multiple=True)
 @click.option('-S', '--selector', default=[], help='Inventory selector (it can be used multiple times)', multiple=True)
 @click.option('--use-ssh-password', default=False, is_flag=True, help='Ask for ssh password')
-@click.option('--use-sudo-password', default=False, is_flag=True, help='Ask for sudo/su password')
-@click.option('--ssh-opt', default='-o ControlMaster=auto -o ControlPath=/dev/shm/rx-ssh-%h -o ControlPersist=5m -o ConnectTimeout=5', show_default=True, help='SSH options')
+@click.option('--use-sudo-password', default=False, is_flag=True, help='Ask for sudo password')
+@click.option('--ssh-opt', default='-o ControlMaster=auto -o ControlPath=/dev/shm/rx-ssh-%h -o ControlPersist=5m -o ConnectTimeout=1', show_default=True, help='SSH options')
 @click.option('--password-envvar', default='LC_PASSWD', show_default=True, help='Environment variable used to pass password to sudo')
 @click.option('-u', '--user', default=os.environ['USER'], show_default=True, help='SSH user')
 @click.option('-P', '--parallel', default=1, show_default=True, help='How many threads to use to run hosts in parallel')
@@ -46,7 +47,7 @@ def get_config(ctx, param, value):
 @click.option('-l', '--task-list', default=False, is_flag=True, help='List tasks in local directory')
 @click.option('-t', '--task-help', default=None, help='Show help for a task')
 @click.option('-w', '--warning-only', default=False, is_flag=True, help="Don't exit if a host fails check, evict host from inventory")
-@click.option('--set-env', default=[], help='Set environment variable (it can be used multiple times)', multiple=True)
+@click.option('--set-env', default=[], show_default=True, help='Set environment variable (it can be used multiple times)', multiple=True)
 @click.option('-v', '--verbosity', count=True, default=0, help='Verbosity level, up to 3')
 @click.argument('tasks', nargs=-1, type=click.UNPROCESSED)
 @click.pass_context
@@ -58,6 +59,7 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
     passwd_code = '#!/bin/bash\necho "${}"\n'.format(password_envvar)
     cache = '{}/.cache/rx'.format(os.environ['HOME'])
 
+    # Debug logging
     verbosity = min(verbosity, 3)
     os.environ['RX_LOG_VERBOSITY'] = str(verbosity)
     if verbosity > 0:
@@ -167,6 +169,9 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
         os.environ[ev[0].upper()] = ev[1]
    
     # Check hosts
+    # ssh -v works much better if >/dev/null 2>&1 , why ???
+    #cmd_template = 'LOG=$(mktemp -p /tmp rx-{}-XXXXXXX) ; {} >/$LOG 2>&1 ; cat $LOG' 
+    cmd_template = 'set -x ; LOG=$(mktemp -p /tmp rx-XXXXXXX) ; exec 3>&1 4>&2 1>$LOG 2>&1 ; {} ; RC=$? ; exec 1>&3 2>&4 ; cat $LOG ; rm -fv $LOG ; exit $RC'
     def _item(i):
         return i
     invalid_hosts = []
@@ -177,24 +182,27 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
             if verbosity > 0:
                 print()
             valid_host = True
-            cmd = '{} {} true'.format(ssh_cmd, h)
+            cmd = '{} -v {} true'.format(ssh_cmd, h, h)
+            cmd = cmd_template.format(cmd)
             LOG.debug('SSH:\n{}'.format(cmd))
-            p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) #stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL) #stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             if p.returncode != 0:
                 valid_host = False
                 msg = "Can't do ssh"
             if valid_host and use_sudo_password:
                 cmd = 'cat>{} && chmod 700 {}'.format(passwd_script, passwd_script)
-                cmd = '{} {} /bin/sh -c {}'.format(ssh_cmd, h, shlex.quote(cmd)) 
+                cmd = '{} -v {} /bin/sh -c {}'.format(ssh_cmd, h, shlex.quote(cmd)) 
+                cmd = cmd_template.format(cmd)
                 LOG.debug('Install password script:\n{} | {}'.format(passwd_code, cmd))
-                p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, input=passwd_code)
+                p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, input=passwd_code)
                 if p.returncode != 0:
                     valid_host = False
                     msg = "Can't copy password script"
             if valid_host:
-                cmd = '{} {} {} true'.format(ssh_cmd, h , sudo_cmd)
+                cmd = '{} -v {} {} true'.format(ssh_cmd, h , sudo_cmd)
+                cmd = cmd_template.format(cmd)
                 LOG.debug('Sudo:\n{}'.format(cmd))
-                p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
                 if p.returncode != 0:
                     valid_host = False
                     msg = "Can't do sudo"

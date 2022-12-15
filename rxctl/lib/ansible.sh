@@ -66,7 +66,7 @@ module(){
     MODULE=$1
     shift
     ARGS="$(args2json $@)"
-    __log.debug __ansible: module: $MODULE $ARGS
+    __log.debug __ansible: module raw: $MODULE $ARGS
     __run "cd ~/.cache/rx ; python3 -m ansible.modules.${MODULE} ${ARGS}" | jq 'del(.invocation)' | jq 'del(.diff)'
 }
 
@@ -93,7 +93,6 @@ case $CMD in
     ;;
     package)
         __log.debug __ansible: cmd: package
-        #MGR=$(__ansible.setup | jq -r '.ansible_pkg_mgr')
         MGR=$(__run 'cat ~/.cache/rx/ansible/facts.json' | jq -r '.ansible_pkg_mgr')
         if check "$1" ; then
             NAME="$1"
@@ -107,7 +106,6 @@ case $CMD in
     ;;
     service)
         __log.debug __ansible: cmd: service
-        #MGR=$(__ansible.setup | jq -r '.ansible_service_mgr')
         MGR=$(__run 'cat ~/.cache/rx/ansible/facts.json' | jq -r '.ansible_service_mgr')
         if check "$1" ; then
             NAME="$1"
@@ -121,8 +119,8 @@ case $CMD in
     ;;
     *)
         MODULE=$1
-        __log.debug __ansible: raw: $MODULE
         shift
+        __log.info __ansible: module : $MODULE $@
         module $MODULE "$@"
     ;;
 esac
