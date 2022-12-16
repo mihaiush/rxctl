@@ -1,5 +1,21 @@
 #!/bin/bash -e
 
+FACTS="~/.cache/rx/ansible/facts.json"
+
+do_facts(){
+__run <<EOF
+if [ ! -s $FACTS ] ; then
+    exit 0
+fi
+SYSAGE=\$(awk '{print int(0.5 + \$1)}' /proc/uptime)
+FACTAGE=\$(( \$(date +"%s") - \$(stat -c'%W' $FACTS) ))
+if [ \$FACTAGE -gt \$SYSAGE ] ; then
+    exit 0
+fi
+exit 1
+EOF
+}
+
 bootstrap(){
     if ! __run python3 -V >/dev/null 2>&1 ; then
         __log.error __ansible: bootstrap: Python3 not available
@@ -34,9 +50,9 @@ EOF
         tar -xzf /tmp/ansible.tar.gz
 EOF
     fi   
-    if ! __run 'test -s ~/.cache/rx/ansible/facts.json' ; then
+    if do_facts ; then
         __log.info __ansible: bootstrap: Facts
-        module setup --gather_subset="distribution,pkg_mgr,service_mgr,virtual" | jq -arM '.ansible_facts' | __run "cat > ~/.cache/rx/ansible/facts.json"
+        module setup --gather_subset="distribution,pkg_mgr,service_mgr,virtual" | jq -arM '.ansible_facts' | __run "rm -f ${FACTS} ; cat >${FACTS}"
     fi
 }
 
@@ -67,7 +83,13 @@ module(){
     shift
     ARGS="$(args2json $@)"
     __log.debug __ansible: module raw: $MODULE $ARGS
-    __run "cd ~/.cache/rx ; python3 -m ansible.modules.${MODULE} ${ARGS}" | jq 'del(.invocation)' | jq 'del(.diff)'
+    R=$(__run "cd ~/.cache/rx ; python3 -m ansible.modules.${MODULE} ${ARGS}" | jq 'del(.invocation)' | jq 'del(.diff)')
+    FAILED=$(echo $R | jq -r '.failed')
+    if [ "${FAILED}" = "true" ] ; then
+        echo $R >&2
+        return 1
+    fi
+    echo $R
 }
 
 
@@ -91,9 +113,13 @@ case $CMD in
             __ansible setup | jq '.ansible_facts'
         fi
     ;;
+    fact)
+        __log.debug __ansible: cmd: fact
+        __run "cat ${FACTS}" | jq -r '."'$1'"'
+    ;;
     package)
         __log.debug __ansible: cmd: package
-        MGR=$(__run 'cat ~/.cache/rx/ansible/facts.json' | jq -r '.ansible_pkg_mgr')
+        MGR=$(__ansible.fact ansible_pkg_mgr)
         if check "$1" ; then
             NAME="$1"
             shift
@@ -106,7 +132,7 @@ case $CMD in
     ;;
     service)
         __log.debug __ansible: cmd: service
-        MGR=$(__run 'cat ~/.cache/rx/ansible/facts.json' | jq -r '.ansible_service_mgr')
+        MGR=$(__ansible.fact ansible_service_mgr)
         if check "$1" ; then
             NAME="$1"
             shift

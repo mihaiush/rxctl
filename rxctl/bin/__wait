@@ -1,0 +1,35 @@
+#!/bin/bash -e
+
+if [ -z "$1" ] ; then
+    echo "$(basename $0) ACTION CHECK TIMEOUT STEP DELAY"
+    exit 2
+fi
+
+ACTION="$1"
+CHECK=$2
+TIMEOUT=$3
+STEP=$4
+DELAY=$5
+
+if [ -n "${DELAY}" ] ; then
+    __log.info "Wait to ${ACTION}, ${DELAY} sec"
+    sleep $DELAY
+fi
+
+T=${TIMEOUT}
+while [ $TIMEOUT -ge 0 ] ; do
+    if ${CHECK} ; then
+        break
+    fi
+    __log.info "Wait to ${ACTION}, ${STEP} sec"
+    sleep $STEP
+    TIMEOUT=$(( $TIMEOUT -$STEP ))
+done
+
+if [ $TIMEOUT -le 0 ] ; then
+    __log.error "Can't check if ${ACTION} OK after ${T} sec"
+    exit 1
+else
+    __log.info "${ACTION^} OK"
+    exit 0
+fi
