@@ -7,6 +7,12 @@ import os
 import click
 
 def get_environment(env, cmd, selector=''):
+    if not os.path.isfile(env):
+        LOG.warning("'{}' missing".format(env))
+        return
+    if not os.access(env, os.X_OK):
+        LOG.warning("'{}' not executable".format(env))
+        return
     if cmd == 'inventory':
         cmd = '{} {}'.format(cmd, selector)
     LOG.info('Get {} from {}'.format(cmd, env))

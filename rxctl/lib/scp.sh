@@ -1,4 +1,7 @@
-#!/bin/bash -e
+#!/bin/bash 
+
+set -e 
+set -o pipefail
 
 if [ $RX_LOG_VERBOSITY -ge 2 ] ; then
     set -x

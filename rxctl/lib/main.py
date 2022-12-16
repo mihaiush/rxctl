@@ -67,12 +67,6 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
         if verbosity > 2:
             ssh_opt = '{} -v'.format(ssh_opt)
 
-    # Set path
-    basedir = os.path.dirname(os.path.realpath(__file__ + '/..'))
-    path = '{}:{}/bin'.format(os.getcwd(),basedir)
-    LOG.info('Path: {}:$PATH'.format(path))
-    os.environ['PATH'] = '{}:{}'.format(path, os.environ['PATH'])
-
     # Restore bin links
     links.restore()
     
@@ -82,8 +76,14 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
 
     # Check arguments - 1
     if (len(selector) == 0 and len(host) == 0) and not (task_list or task_help):
-        LOG.error('At least one of -l, -t , -H or -S must be specified.')
+        LOG.error('At least one of -l, -t, -H, -S or --help must be specified.')
         sys.exit(1)
+
+    # Set path
+    basedir = os.path.dirname(os.path.realpath(__file__ + '/..'))
+    path = '{}:{}/bin'.format(os.getcwd(),basedir)
+    LOG.info('Path: {}:$PATH'.format(path))
+    os.environ['PATH'] = '{}:{}'.format(path, os.environ['PATH'])
 
     # List tasks in current director
     if task_list:

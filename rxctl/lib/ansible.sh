@@ -1,4 +1,7 @@
-#!/bin/bash -e
+#!/bin/bash 
+
+set -e 
+set -o pipefail
 
 FACTS="~/.cache/rx/ansible/facts.json"
 
@@ -83,13 +86,13 @@ module(){
     shift
     ARGS="$(args2json $@)"
     __log.debug __ansible: module raw: $MODULE $ARGS
-    R=$(__run "cd ~/.cache/rx ; python3 -m ansible.modules.${MODULE} ${ARGS}" | jq 'del(.invocation)' | jq 'del(.diff)')
+    R=$(__run "cd ~/.cache/rx ; python3 -m ansible.modules.${MODULE} ${ARGS}" || true)
     FAILED=$(echo $R | jq -r '.failed')
     if [ "${FAILED}" = "true" ] ; then
-        echo $R >&2
+        __log.error "$(echo $R | jq -r '.msg')"
         return 1
     fi
-    echo $R
+    echo $R | jq 'del(.invocation)' | jq 'del(.diff)'
 }
 
 
