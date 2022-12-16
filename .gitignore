@@ -1,5 +1,6 @@
 # Local
 sync.sh
+rxctl/lib/links.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
