@@ -55,7 +55,7 @@ EOF
     fi   
     if do_facts ; then
         __log.info __ansible: bootstrap: Facts
-        module setup --gather_subset="distribution,pkg_mgr,service_mgr,virtual" | jq -arM '.ansible_facts' | __run "rm -f ${FACTS} ; cat >${FACTS}"
+        module setup --gather_subset="!all,!min,distribution,pkg_mgr,service_mgr,virtual" | jq -arM '.ansible_facts' | __run "rm -f ${FACTS} ; cat >${FACTS}"
     fi
 }
 
