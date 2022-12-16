@@ -7,12 +7,13 @@ if [ $RX_LOG_VERBOSITY -ge 2 ] ; then
     set -x
 fi
 
-if [ "${1}" = "-r" ] ; then
-    R="-r "
+NA=$(( $# - 2 ))
+ARGS=""
+while [ $NA -gt 0 ] ; do
+    ARGS="${ARGS} ${1}"
     shift
-else
-    R=""
-fi
+    NA=$(( $NA - 1 ))
+done
 
 CMD=$(basename $0)
 
@@ -26,5 +27,5 @@ else
     exit 1
 fi
 
-__log.debug "$CMD: '${SRC}' -> '${DST}'"
-${RX_SCP_CMD} ${R}"${SRC}" "${DST}"
+__log.debug "${CMD}${ARGS}: '${SRC}' -> '${DST}'"
+${RX_SCP_CMD}${ARGS} "${SRC}" "${DST}"
