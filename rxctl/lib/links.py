@@ -18,11 +18,12 @@ def save():
 
 
 def restore():
-    data = json.loads(open(DB, 'r').read())
-    for d in data:
-        l = '{}/{}'.format(BIN, d[0])
-        if not os.path.isfile(l):
-            os.symlink(d[1], l)       
+    if os.path.isfile(DB):
+        data = json.loads(open(DB, 'r').read())
+        for d in data:
+            l = '{}/{}'.format(BIN, d[0])
+            if not os.path.isfile(l):
+                os.symlink(d[1], l)       
 
         
 if __name__ == '__main__':
