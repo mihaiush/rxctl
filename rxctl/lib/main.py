@@ -92,11 +92,7 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
         p.align['Task'] = 'r'
         p.align['Description'] = 'l'
         for t in get_tasks():
-            if check_task(t):
-                LOG.debug('Add task: {}'.format(t))
-                p.add_row([click.style(t, fg='blue', bold=True), task_doc(t, short=True)])
-            else:
-                LOG.debug('Invalid task: {}'.format(t))
+            p.add_row([click.style(t, fg='blue', bold=True), task_doc(t, short=True)])
         print(p)
         sys.exit()
 
@@ -144,6 +140,8 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
     os.environ['RX_CACHE'] = cache
     os.environ['RX_SHELL'] = remote_shell
     os.environ['RX_BASEDIR'] = basedir
+    if parallel > 1:
+        os.environ['RX_PARALLEL'] = 'yes'
     os.environ['RX_PASSWD_SCRIPT'] = passwd_script
     os.environ['RX_USER'] = user
     os.environ['RX_PASSWD_ENVVAR'] = password_envvar

@@ -1,10 +1,13 @@
 from .log import LOG
+
 import json
 import sys
 import subprocess
 import glob
 import os
+
 import click
+
 
 def get_environment(env, cmd, selector=''):
     if not os.path.isfile(env):
@@ -30,12 +33,24 @@ def get_environment(env, cmd, selector=''):
     return data1
 
 
+def check_task(t):
+    c = subprocess.run('{} __name__'.format(t), shell=True, encoding='utf-8', errors='ignore', bufsize=0, capture_output=True)
+    if c.stdout.strip() == t:
+        return True
+    return False
+
+
 def get_tasks():
     tasks = []
     files = glob.glob('__*')
     for f in files:
         if os.path.isfile(f) and os.access(f, os.X_OK):
-            tasks.append(f)
+            if check_task(f):
+                LOG.debug('Add task: {}'.format(f))
+                tasks.append(f)
+            else:
+                LOG.debug('Invalid task: {}'.format(f))
+    tasks.sort()
     return tasks
 
 
@@ -51,9 +66,3 @@ def task_doc(task, short=False):
         h = p.stdout
     return h
 
-
-def check_task(t):
-    c = subprocess.run('{} __name__'.format(t), shell=True, encoding='utf-8', errors='ignore', bufsize=0, capture_output=True)
-    if c.stdout.strip() == t:
-        return True
-    return False

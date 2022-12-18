@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-set -e 
+set -e
 set -o pipefail
 
 FACTS="~/.cache/rx/ansible/facts.json"
@@ -11,7 +11,7 @@ if [ ! -s $FACTS ] ; then
     exit 0
 fi
 SYSAGE=\$(awk '{print int(0.5 + \$1)}' /proc/uptime)
-FACTAGE=\$(( \$(date +"%s") - \$(stat -c'%W' $FACTS) ))
+FACTAGE=\$(( \$(date +"%s") - \$(stat -c'%Z' $FACTS) ))
 if [ \$FACTAGE -gt \$SYSAGE ] ; then
     exit 0
 fi
@@ -59,6 +59,10 @@ EOF
     fi
 }
 
+fact(){
+    __run "cat ${FACTS}" | jq -r '."'$1'"'
+}
+
 args2json(){
     __log.debug __ansible: args2json: raw: $@
     ARGS='{\"ANSIBLE_MODULE_ARGS\":{'
@@ -84,6 +88,7 @@ check(){
 module(){
     MODULE=$1
     shift
+    __log.info __ansible: module : $MODULE $@
     ARGS="$(args2json $@)"
     __log.debug __ansible: module raw: $MODULE $ARGS
     R=$(__run "cd ~/.cache/rx ; python3 -m ansible.modules.${MODULE} ${ARGS}" || true)
@@ -95,15 +100,9 @@ module(){
     echo $R | jq 'del(.invocation)' | jq 'del(.diff)'
 }
 
-
 if [ $RX_LOG_VERBOSITY -ge 2 ] ; then
     set -x
 fi
-
-if [ -z "$RX_ANSIBLE_BOOTSTRAPED" ] ; then
-    bootstrap
-fi
-export RX_ANSIBLE_BOOTSTRAPED=yes
 
 CMD=$(echo $0 | awk -F'.' '{print $2}')
 
@@ -111,45 +110,42 @@ case $CMD in
     setup)
         __log.debug __ansible: cmd: setup
         if check "$1" ; then
-            __ansible setup --gather_subset="!all,!min,${1}" | jq '.ansible_facts'
+            module setup --gather_subset="!all,!min,${1}" | jq '.ansible_facts'
         else
-            __ansible setup | jq '.ansible_facts'
+            module setup | jq '.ansible_facts'
         fi
     ;;
     fact)
         __log.debug __ansible: cmd: fact
-        __run "cat ${FACTS}" | jq -r '."'$1'"'
+        fact $1
     ;;
     package)
         __log.debug __ansible: cmd: package
-        MGR=$(__ansible.fact ansible_pkg_mgr)
+        MGR=$(fact ansible_pkg_mgr)
         if check "$1" ; then
             NAME="$1"
             shift
         fi
         if [ -n "$NAME" ] ; then
-            __ansible $MGR --name="$NAME" "$@" 
+            module $MGR --name="$NAME" "$@" 
         else
-            __ansible $MGR "$@" 
+            module $MGR "$@" 
         fi
     ;;
     service)
         __log.debug __ansible: cmd: service
-        MGR=$(__ansible.fact ansible_service_mgr)
+        MGR=$(fact ansible_service_mgr)
         if check "$1" ; then
             NAME="$1"
             shift
         fi
         if [ -n "$NAME" ] ; then
-            __ansible $MGR --name="$NAME" "$@" | jq 'del(.status)'
+            module $MGR --name="$NAME" "$@" | jq 'del(.status)'
         else
-            __ansible $MGR "$@" | jq 'del(.status)'
+            module $MGR "$@" | jq 'del(.status)'
         fi
     ;;
     *)
-        MODULE=$1
-        shift
-        __log.info __ansible: module : $MODULE $@
-        module $MODULE "$@"
+        module "$@"
     ;;
 esac
