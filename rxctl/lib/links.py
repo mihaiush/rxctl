@@ -9,7 +9,7 @@ DB = '{}/links.json'.format(ROOT)
 def save():
     data = []
     for f in os.listdir(BIN):
-        real_f = '{}/{}'.format(BIN,f)
+        real_f = '{}/{}'.format(BIN, f)
         if os.path.islink(real_f):
             t = os.readlink(real_f)
             data.append([f, t])
