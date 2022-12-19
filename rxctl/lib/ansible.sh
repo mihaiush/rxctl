@@ -104,6 +104,8 @@ if [ $RX_LOG_VERBOSITY -ge 2 ] ; then
     set -x
 fi
 
+bootstrap
+
 CMD=$(echo $0 | awk -F'.' '{print $2}')
 
 case $CMD in
