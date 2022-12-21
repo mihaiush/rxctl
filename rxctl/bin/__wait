@@ -15,7 +15,7 @@ STEP=$4
 DELAY=$5
 
 if [ -n "${DELAY}" ] ; then
-    __log.info "Wait to ${ACTION}, ${DELAY} sec"
+    __log.info "Wait for ${ACTION}, ${DELAY} sec"
     sleep $DELAY
 fi
 
@@ -24,7 +24,7 @@ while [ $TIMEOUT -ge 0 ] ; do
     if ${CHECK} ; then
         break
     fi
-    __log.info "Wait to ${ACTION}, ${STEP} sec"
+    __log.info "Wait for ${ACTION}, ${STEP} sec"
     sleep $STEP
     TIMEOUT=$(( $TIMEOUT -$STEP ))
 done

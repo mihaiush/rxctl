@@ -33,8 +33,8 @@ def get_config(ctx, param, value):
     callback=get_config,
     is_eager=True
 )
-@click.option('-H', '--host', default=[], help='Comma separated list of host (it can be used multiple times)', multiple=True)
-@click.option('-S', '--selector', default=[], help='Inventory selector (it can be used multiple times)', multiple=True)
+@click.option('-H', '--host', default=[], help='Comma separated list of host (can be used multiple times)', multiple=True)
+@click.option('-S', '--selector', default=[], help='Inventory selector (can be used multiple times)', multiple=True)
 @click.option('--use-ssh-password', default=False, is_flag=True, help='Ask for ssh password')
 @click.option('--use-sudo-password', default=False, is_flag=True, help='Ask for sudo password')
 @click.option('--ssh-opt', default='-o ControlMaster=auto -o ControlPath=/dev/shm/rx-ssh-%h -o ControlPersist=5m -o ConnectTimeout=1', show_default=True, help='SSH options')
@@ -47,11 +47,12 @@ def get_config(ctx, param, value):
 @click.option('-l', '--task-list', default=False, is_flag=True, help='List tasks in local directory')
 @click.option('-t', '--task-help', default=None, help='Show help for a task')
 @click.option('-w', '--warning-only', default=False, is_flag=True, help="Don't exit if a host fails check, evict host from inventory")
-@click.option('--set-env', default=[], show_default=True, help='Set environment variable (it can be used multiple times)', multiple=True)
+@click.option('-x', '--exclude', default=[], help='Comma separated list of host to exclude from inventory (can be used multiple times)', multiple=True)
+@click.option('--set-env', default=[], show_default=True, help='Set environment variable (can be used multiple times)', multiple=True)
 @click.option('-v', '--verbosity', count=True, default=0, help='Verbosity level, up to 3')
 @click.argument('tasks', nargs=-1, type=click.UNPROCESSED)
 @click.pass_context
-def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, ssh_opt, password_envvar, user, parallel, ad_hoc, inventory, check_only, task_list, task_help, warning_only, set_env, verbosity, tasks):
+def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, ssh_opt, password_envvar, user, parallel, ad_hoc, inventory, check_only, task_list, task_help, warning_only, exclude, set_env, verbosity, tasks):
 
     # Non-configurable parameters
     remote_shell = '/bin/sh'
@@ -121,6 +122,12 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
             for h in host:
                 if not h in INVENTORY:
                     INVENTORY.append(h)
+    for xlist in exclude:
+        for x in xlist.split(','):
+            if x in INVENTORY:
+                LOG.debug("Remove '{}' from inventory".format(x))
+                INVENTORY.remove(x)
+    
     
     # Show inventory
     if inventory:
