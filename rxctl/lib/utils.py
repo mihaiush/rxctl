@@ -10,6 +10,7 @@ import click
 
 
 def get_environment(env, cmd, selector=''):
+    LOG.debug("get_environment: env='{}', cmd='{}', selector='{}'".format(env, cmd, selector))
     if not os.path.isfile(env):
         LOG.warning("'{}' missing".format(env))
         return
@@ -20,11 +21,15 @@ def get_environment(env, cmd, selector=''):
         cmd = '{} {}'.format(cmd, selector)
     LOG.info('Get {} from {}'.format(cmd, env))
     p = subprocess.run('{} {}'.format(env, cmd), capture_output=True, shell=True, encoding='utf-8', errors='ignore')
-    try:
-        data1 = json.loads(p.stdout)
-    except:
-        LOG.error("{} {} didn't return a valid json".format(env, cmd))
-        sys.exit(1)
+    LOG.debug("get_environment: out:\n{}".format(p.stdout))
+    if cmd == 'inventory ':
+        data1 = p.stdout
+    else:
+        try:
+            data1 = json.loads(p.stdout)
+        except:
+            LOG.error("{} {} didn't return a valid json".format(env, cmd))
+            sys.exit(1)
     if cmd == 'config':
         data2 = {}
         for k,v in data1.items():

@@ -76,8 +76,8 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
         LOG.debug('{}: {}'.format(k, v))
 
     # Check arguments - 1
-    if (len(selector) == 0 and len(host) == 0) and not (task_list or task_help):
-        LOG.error('At least one of -l, -t, -H, -S or --help must be specified.')
+    if (len(selector) == 0 and len(host) == 0) and not (task_list or task_help or inventory):
+        LOG.error('At least one of -l, -t, -I, -H, -S or --help must be specified.')
         sys.exit(1)
 
     # Set path
@@ -103,6 +103,11 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
         print()
         print(click.style(task_help, fg='blue', bold=True))
         print(task_doc(task_help))
+        sys.exit()
+
+    # Inventory summary
+    if inventory and not selector:
+        LOG.info('Inventory summary:\n{}'.format(get_environment(environment, 'inventory')))
         sys.exit()
 
     # Check arguments - 2
