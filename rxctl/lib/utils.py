@@ -23,7 +23,7 @@ def get_environment(env, cmd, selector=''):
     p = subprocess.run('{} {}'.format(env, cmd), capture_output=True, shell=True, encoding='utf-8', errors='ignore')
     LOG.debug("get_environment: out:\n{}".format(p.stdout))
     if cmd == 'inventory ':
-        data1 = p.stdout.strip()
+        data1 = p.stdout
     else:
         try:
             data1 = json.loads(p.stdout)
