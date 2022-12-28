@@ -182,11 +182,9 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
     # ssh -v works much better if >/dev/null 2>&1 , why ???
     #cmd_template = 'LOG=$(mktemp -p /tmp rx-{}-XXXXXXX) ; {} >/$LOG 2>&1 ; cat $LOG' 
     cmd_template = 'set -x ; LOG=$(mktemp -p /tmp rx-XXXXXXX) ; exec 3>&1 4>&2 1>$LOG 2>&1 ; {} ; RC=$? ; exec 1>&3 2>&4 ; cat $LOG ; rm -fv $LOG ; exit $RC'
-    def _item(i):
-        return i
     invalid_hosts = []
     LOG.info('Check hosts connectivity')
-    with click.progressbar(INVENTORY, bar_template='    [%(bar)s] %(info)s', show_eta=False, item_show_func=_item) as pbar:
+    with click.progressbar(INVENTORY, bar_template='    [%(bar)s] %(info)s', show_eta=False, item_show_func=lambda x : x) as pbar:
         for h in pbar:
             LOG.set_label(h)
             if verbosity > 0:
