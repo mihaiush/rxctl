@@ -48,17 +48,17 @@ def get_config(ctx, param, value):
 @click.option('-t', '--task-help', default=None, help='Show help for a task')
 @click.option('-w', '--warning-only', default=False, is_flag=True, help="Don't exit if a host fails check, evict host from inventory")
 @click.option('-x', '--exclude', default=[], help='Comma separated list of host to exclude from inventory (can be used multiple times)', multiple=True)
+@click.option('-i', '--inline-check', default=False, is_flag=True, help="Don't check hosts before tasks, do it for each host at the begining of the task list")
 @click.option('--set-env', default=[], show_default=True, help='Set environment variable (can be used multiple times)', multiple=True)
 @click.option('-v', '--verbosity', count=True, default=0, help='Verbosity level, up to 3')
 @click.argument('tasks', nargs=-1, type=click.UNPROCESSED)
 @click.pass_context
-def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, ssh_opt, password_envvar, user, parallel, ad_hoc, inventory, check_only, task_list, task_help, warning_only, exclude, set_env, verbosity, tasks):
+def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, ssh_opt, password_envvar, user, parallel, ad_hoc, inventory, check_only, task_list, task_help, warning_only, exclude, inline_check, set_env, verbosity, tasks):
 
     # Non-configurable parameters
     remote_shell = '/bin/sh'
     passwd_script = 'rx-passwd'
     passwd_code = '#!/bin/bash\necho "${}"\n'.format(password_envvar)
-    cache = '{}/.cache/rx'.format(os.environ['HOME'])
 
     # Debug logging
     verbosity = min(verbosity, 3)
@@ -149,7 +149,6 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
         passwd = getpass.getpass('--> {} password : '.format('/'.join(passwd)))
 
     # Build environment
-    os.environ['RX_CACHE'] = cache
     os.environ['RX_SHELL'] = remote_shell
     os.environ['RX_BASEDIR'] = basedir
     if parallel > 1:
@@ -179,56 +178,29 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
         os.environ[ev[0].upper()] = ev[1]
    
     # Check hosts
-    # ssh -v works much better if >/dev/null 2>&1 , why ???
-    #cmd_template = 'LOG=$(mktemp -p /tmp rx-{}-XXXXXXX) ; {} >/$LOG 2>&1 ; cat $LOG' 
-    cmd_template = 'set -x ; LOG=$(mktemp -p /tmp rx-XXXXXXX) ; exec 3>&1 4>&2 1>$LOG 2>&1 ; {} ; RC=$? ; exec 1>&3 2>&4 ; cat $LOG ; rm -fv $LOG ; exit $RC'
-    invalid_hosts = []
-    LOG.info('Check hosts connectivity')
-    with click.progressbar(INVENTORY, bar_template='    [%(bar)s] %(info)s', show_eta=False, item_show_func=lambda x : x) as pbar:
-        for h in pbar:
-            LOG.set_label(h)
-            if verbosity > 0:
-                print()
-            valid_host = True
-            cmd = '{} -v {} true'.format(ssh_cmd, h, h)
-            cmd = cmd_template.format(cmd)
-            LOG.debug('SSH:\n{}'.format(cmd))
-            p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL) #stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            if p.returncode != 0:
-                valid_host = False
-                msg = "Can't do ssh"
-            if valid_host and use_sudo_password:
-                cmd = 'cat>{} && chmod 700 {}'.format(passwd_script, passwd_script)
-                cmd = '{} -v {} /bin/sh -c {}'.format(ssh_cmd, h, shlex.quote(cmd)) 
-                cmd = cmd_template.format(cmd)
-                LOG.debug('Install password script:\n{} | {}'.format(passwd_code, cmd))
-                p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, input=passwd_code)
-                if p.returncode != 0:
-                    valid_host = False
-                    msg = "Can't copy password script"
-            if valid_host:
-                cmd = '{} -v {} {} true'.format(ssh_cmd, h , sudo_cmd)
-                cmd = cmd_template.format(cmd)
-                LOG.debug('Sudo:\n{}'.format(cmd))
-                p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-                if p.returncode != 0:
-                    valid_host = False
-                    msg = "Can't do sudo"
-            if not valid_host:
-                if verbosity == 0:
+    if check_only or not inline_check: 
+        LOG.info('Check hosts connectivity')
+        invalid_hosts = []
+        with click.progressbar(INVENTORY, bar_template='    [%(bar)s] %(info)s', show_eta=False, item_show_func=lambda x : x) as pbar:
+            for h in pbar:
+                LOG.set_label(h)
+                if verbosity > 0:
                     print()
-                msg = '{}: rc={}:\n{}'.format(msg, p.returncode,p.stdout)
-                if warning_only:
-                    LOG.warning(msg)
-                else:
-                    LOG.error(msg)
-                    sys.exit(1)
-                invalid_hosts.append(h)
-                INVENTORY.remove(h)
-    LOG.set_label()
-    if len(invalid_hosts) > 0:
-        LOG.warning('Remove from inventory:\n{}'.format(invalid_hosts))
-    LOG.info('Valid inventory:\n{}'.format(INVENTORY))
+                valid_host, msg = check(h, ssh_cmd, sudo_cmd, use_sudo_password, passwd_script, passwd_code)
+                if not valid_host:
+                    if verbosity == 0:
+                        print()
+                    if warning_only:
+                        LOG.warning(msg)
+                    else:
+                        LOG.error(msg)
+                        sys.exit(1)
+                    invalid_hosts.append(h)
+                    INVENTORY.remove(h)
+        LOG.set_label()
+        if len(invalid_hosts) > 0:
+            LOG.warning('Remove from inventory:\n{}'.format(invalid_hosts))
+        LOG.info('Valid inventory:\n{}'.format(INVENTORY))
     if check_only:
         sys.exit()
 
@@ -256,7 +228,7 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
         LOG.info('Task list:\n{}'.format(TASKS))
 
     worker_parameters = []
-    common_parameters = [TASKS, ad_hoc, parallel > 1]
+    common_parameters = [TASKS, ad_hoc, parallel > 1, warning_only, inline_check, ssh_cmd, sudo_cmd, use_sudo_password, passwd_script, passwd_code]
     for h in INVENTORY:
              worker_parameters.append([h] + common_parameters)
 
@@ -269,7 +241,7 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
             worker(*p)
 
 
-def worker(host, task, ah, prl):
+def worker(host, task, ah, prl, wo, ic, ssh_cmd, sudo_cmd, use_sudo_password, passwd_script, passwd_code):
     def run(cmd, label):
         LOG.debug('Worker cmd: {}'.format(cmd))
         if label:
@@ -290,6 +262,15 @@ def worker(host, task, ah, prl):
         llabel = host
     else:
         llabel = None
+    if ic:
+        LOG.info('Check hosts connectivity')
+        valid_host,msg = check(host, ssh_cmd, sudo_cmd, use_sudo_password, passwd_script, passwd_code)
+        if not valid_host:
+            if prl or wo:
+                LOG.warning(msg)
+            else:
+                LOG.error(msg)
+                sys.exit(1)
     if ah:
         LOG.info('Ad-hoc task')
         rc = run("__run '{}'".format(task), llabel)
@@ -305,5 +286,36 @@ def worker(host, task, ah, prl):
             LOG.error('Task terminated with error, aborting')
             sys.exit(1)
 
-if __name__ == '__main__':
-    cli()
+def check(h, ssh_cmd, sudo_cmd, use_sudo_password, passwd_script, passwd_code):
+    cmd_template = 'set -x ; LOG=$(mktemp -p /tmp rx-XXXXXXXX) ; exec 3>&1 4>&2 1>$LOG 2>&1 ; {} ; RC=$? ; exec 1>&3 2>&4 ; cat $LOG ; rm -fv $LOG ; exit $RC'
+    valid_host = True
+    cmd = '{} -v {} true'.format(ssh_cmd, h, h)
+    cmd = cmd_template.format(cmd)
+    LOG.debug('SSH:\n{}'.format(cmd))
+    p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL) #stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if p.returncode != 0:
+        valid_host = False
+        msg = "Can't do ssh"
+    if valid_host and use_sudo_password:
+        cmd = 'cat>{} && chmod 700 {}'.format(passwd_script, passwd_script)
+        cmd = '{} -v {} /bin/sh -c {}'.format(ssh_cmd, h, shlex.quote(cmd))
+        cmd = cmd_template.format(cmd)
+        LOG.debug('Install password script:\n{} | {}'.format(passwd_code, cmd))
+        p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, input=passwd_code)
+        if p.returncode != 0:
+            valid_host = False
+            msg = "Can't copy password script"
+    if valid_host:
+        cmd = '{} -v {} {} true'.format(ssh_cmd, h , sudo_cmd)
+        cmd = cmd_template.format(cmd)
+        LOG.debug('Sudo:\n{}'.format(cmd))
+        p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        if p.returncode != 0:
+            valid_host = False
+            msg = "Can't do sudo"
+    if not valid_host:
+        msg = '{}: rc={}:\n{}'.format(msg, p.returncode,p.stdout)
+    else:
+        msg = None
+    return valid_host, msg
+

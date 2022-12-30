@@ -27,11 +27,11 @@ bootstrap(){
     CDIR=$(pwd)
     cd $(dirname $RX_ANSIBLE)
     LAV=$(python3 -c "from ansible.release import __version__ ; print(__version__)")
-    SRC_TAR="${RX_CACHE}/ansible-${LAV}.tar.gz"
-    if [ ! -f "${SRC_TAR}" ] ; then
+    SRC_TAR=~/.cache/rx/ansible-${LAV}.tar.gz
+    if [ ! -f ${SRC_TAR} ] ; then
         __log.info __ansible: bootstrap: Pack ansible $LAV
-        mkdir -p ${RX_CACHE}
-        rm -fv ${RX_CACHE}/ansible-*.tar.gz
+        mkdir -p ~/.cache/rx
+        rm -fv ~/.cache/rx/ansible-*.tar.gz
         tar -czf $SRC_TAR --exclude=*.pyc --exclude=__pycache__ ansible/release.py ansible/modules ansible/module_utils
     else
         __log.debug __ansible: bootstrap: Local ansible version: $LAV
