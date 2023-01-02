@@ -9,7 +9,7 @@ import subprocess
 import getpass
 import shlex
 from multiprocessing import Pool
-#import types
+from types import SimpleNamespace
 
 from prettytable import PrettyTable
 import click
@@ -53,7 +53,7 @@ def get_config(ctx, param, value):
 @click.option('-v', '--verbosity', count=True, default=0, help='Verbosity level, up to 3')
 @click.argument('tasks', nargs=-1, type=click.UNPROCESSED)
 @click.pass_context
-def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, ssh_opt, password_envvar, user, parallel, ad_hoc, inventory, check_only, task_list, task_help, warning_only, exclude, inline_check, set_env, verbosity, tasks):
+def cli(cc, environment, host, selector, use_ssh_password, use_sudo_password, ssh_opt, password_envvar, user, parallel, ad_hoc, inventory, check_only, task_list, task_help, warning_only, exclude, inline_check, set_env, verbosity, tasks):
 
     # Non-configurable parameters
     remote_shell = '/bin/sh'
@@ -72,7 +72,7 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
     links.restore()
     
     # Debug parameters, actual values 
-    for k,v in ctx.params.items():
+    for k,v in cc.params.items():
         LOG.debug('{}: {}'.format(k, v))
 
     # Check arguments - 1
@@ -176,7 +176,7 @@ def cli(ctx, environment, host, selector, use_ssh_password, use_sudo_password, s
     for ev in set_env:
         ev = ev.split('=')
         os.environ[ev[0].upper()] = ev[1]
-   
+  
     # Check hosts
     if check_only or not inline_check: 
         LOG.info('Check hosts connectivity')
