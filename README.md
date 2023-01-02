@@ -1,12 +1,13 @@
 # rxctl
 Linux remote execution tool.
+
 ## What is rxctl ?
 It executes tasks (scripts) on remote hosts over SSH and SUDO. The tasks can contain remote and local executed code. Remote code is always executed as root, sudo is used to elevate privileges. It may work on other UNIX-like OS but it was only tested on Linux (Debian) and it relies on /bin/bash for most of its helper tools. It is heavily influenced by fabric (https://www.fabfile.org) and cdis (https://www.cdi.st/manual/latest/index.html):
 - tasks and helper tools names start with __,
 - tasks are written in shell script (/bin/sh),
 - it is not a configuration tool but a scripting one. It doesn’t try to achieve any kind of idempotency, commands are executed in order they appear in task,  
 
-The tool itself is not involved in the remote code execution in any way, its job is to prepare a list of hosts and an environment in which external scripts (tasks) are executed on each host (sequential or in parallel). The remote execution is handled by some helper commands (__run, __get, __put, …) 
+The tool itself is not involved in the remote code execution in any way, its job is to prepare a list of hosts and an environment in which external scripts (tasks) are executed on each host (sequential or in parallel). The remote execution is handled by some helper commands (__run, __get, __put, …). It also adds the current directory and the bin directory to the path. 
 
 ```
 rxctl [OPTIONS] [TASKS]...
@@ -41,8 +42,17 @@ Options:
   -v, --verbosity         Verbosity level, up to 3
   --help                  Show this message and exit.
 ```
+
 ## Environment script
 The environment script (default ```./environment```) is used to overwrite rxctl parameters and to generate the list of host (inventory) on which to run the tasks:
 - ```environment check```, should produce a JSON dictionary of parameters you want to overwrite,
 - ```environment inventory```, free text which is displayed when you run ```rxctl -I``` without any other parameter,
 - ```environment inventory <SELECTOR>```, JSON list of hosts
+
+## Helper tools
+### __init
+### __run
+### __get, __put
+### __log
+### __wait
+### __ansible
