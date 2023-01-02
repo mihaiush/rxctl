@@ -41,3 +41,8 @@ Options:
   -v, --verbosity         Verbosity level, up to 3
   --help                  Show this message and exit.
 ```
+## Environment script
+The environment script (default ```./environment```) is used to overwrite rxctl parameters and to generate the list of host (inventory) on which to run the tasks:
+- ```environment check```, should produce a JSON dictionary of parameters you want to overwrite,
+- ```environment inventory```, free text which is displayed when you run ```rxctl -I``` without any other parameter,
+- ```environment inventory <SELECTOR>```, JSON list of hosts
