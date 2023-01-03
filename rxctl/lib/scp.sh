@@ -7,12 +7,10 @@ if [ $RX_LOG_VERBOSITY -ge 2 ] ; then
     set -x
 fi
 
-NA=$(( $# - 2 ))
 ARGS=""
-while [ $NA -gt 0 ] ; do
+while [ $# -gt 2 ] ; do
     ARGS="${ARGS} ${1}"
     shift
-    NA=$(( $NA - 1 ))
 done
 
 CMD=$(basename $0)

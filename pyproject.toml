@@ -3,6 +3,8 @@ name = "rxctl"
 version = "0.0.0"
 description = "Linux remote execution tool"
 authors = ["mihaiush <mihaiush@gmail.com>"]
+readme = "README.md"
+homepage = "https://github.com/mihaiush/rxctl"
 
 [tool.poetry.dependencies]
 python = "^3.7"

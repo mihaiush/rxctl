@@ -263,7 +263,7 @@ def worker(host, task, ah, prl, wo, ic, ssh_cmd, sudo_cmd, use_sudo_password, pa
     else:
         llabel = None
     if ic:
-        LOG.info('Check hosts connectivity')
+        LOG.info('Check host connectivity')
         valid_host,msg = check(host, ssh_cmd, sudo_cmd, use_sudo_password, passwd_script, passwd_code)
         if not valid_host:
             if prl or wo:
