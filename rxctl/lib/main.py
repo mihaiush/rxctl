@@ -176,7 +176,19 @@ def cli(cc, environment, host, selector, use_ssh_password, use_sudo_password, ss
     for ev in set_env:
         ev = ev.split('=')
         os.environ[ev[0].upper()] = ev[1]
-  
+
+    # Context
+    ctx = SimpleNamespace()
+    ctx.ssh_cmd = ssh_cmd
+    ctx.sudo_cmd = sudo_cmd
+    ctx.use_sudo_password = use_sudo_password
+    ctx.passwd_script = passwd_script
+    ctx.passwd_code = passwd_code
+    ctx.ad_hoc = ad_hoc
+    ctx.parallel = parallel > 1
+    ctx.warning_only = warning_only
+    ctx.inline_check = inline_check
+
     # Check hosts
     if check_only or not inline_check: 
         LOG.info('Check hosts connectivity')
@@ -186,7 +198,7 @@ def cli(cc, environment, host, selector, use_ssh_password, use_sudo_password, ss
                 LOG.set_label(h)
                 if verbosity > 0:
                     print()
-                valid_host, msg = check(h, ssh_cmd, sudo_cmd, use_sudo_password, passwd_script, passwd_code)
+                valid_host, msg = check(h, ctx)
                 if not valid_host:
                     if verbosity == 0:
                         print()
@@ -228,7 +240,7 @@ def cli(cc, environment, host, selector, use_ssh_password, use_sudo_password, ss
         LOG.info('Task list:\n{}'.format(TASKS))
 
     worker_parameters = []
-    common_parameters = [TASKS, ad_hoc, parallel > 1, warning_only, inline_check, ssh_cmd, sudo_cmd, use_sudo_password, passwd_script, passwd_code]
+    common_parameters = [TASKS, ctx]
     for h in INVENTORY:
              worker_parameters.append([h] + common_parameters)
 
@@ -241,7 +253,7 @@ def cli(cc, environment, host, selector, use_ssh_password, use_sudo_password, ss
             worker(*p)
 
 
-def worker(host, task, ah, prl, wo, ic, ssh_cmd, sudo_cmd, use_sudo_password, passwd_script, passwd_code):
+def worker(host, task_list, ctx):
     def run(cmd, label):
         LOG.debug('Worker cmd: {}'.format(cmd))
         if label:
@@ -258,55 +270,62 @@ def worker(host, task, ah, prl, wo, ic, ssh_cmd, sudo_cmd, use_sudo_password, pa
 
     os.environ['RX_HOST'] = host
     LOG.set_label(host)
-    if prl:
+    if ctx.parallel:
         llabel = host
     else:
         llabel = None
-    if ic:
+
+    if ctx.inline_check:
         LOG.info('Check host connectivity')
-        valid_host,msg = check(host, ssh_cmd, sudo_cmd, use_sudo_password, passwd_script, passwd_code)
+        valid_host,msg = check(host, ctx)
         if not valid_host:
-            if prl or wo:
+            rc = -1
+            if ctx.parallel or ctx.warning_only:
                 LOG.warning(msg)
             else:
                 LOG.error(msg)
                 sys.exit(1)
-    if ah:
-        LOG.info('Ad-hoc task')
-        rc = run("__run '{}'".format(task), llabel)
     else:
-        for t in task:
-            rc = run('{} {}'.format(t['name'], t['args']), llabel)
-            if rc != 0:
-                break
+        valid_host = True
+
+    if valid_host:
+        if ctx.ad_hoc:
+            LOG.info('Ad-hoc task')
+            rc = run("__run '{}'".format(task_list), llabel)
+        else:
+            for t in task_list:
+                rc = run('{} {}'.format(t['name'], t['args']), llabel)
+                if rc != 0:
+                    break
+    
     if rc != 0:
-        if prl:
+        if ctx.parallel or ctx.warning_only:
             LOG.warning('Task terminated with error')
         else:
             LOG.error('Task terminated with error, aborting')
             sys.exit(1)
 
-def check(h, ssh_cmd, sudo_cmd, use_sudo_password, passwd_script, passwd_code):
+def check(host, ctx):
     cmd_template = 'set -x ; LOG=$(mktemp -p /tmp rx-XXXXXXXX) ; exec 3>&1 4>&2 1>$LOG 2>&1 ; {} ; RC=$? ; exec 1>&3 2>&4 ; cat $LOG ; rm -fv $LOG ; exit $RC'
     valid_host = True
-    cmd = '{} -v {} true'.format(ssh_cmd, h, h)
+    cmd = '{} -v {} true'.format(ctx.ssh_cmd, host, host)
     cmd = cmd_template.format(cmd)
     LOG.debug('SSH:\n{}'.format(cmd))
     p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL) #stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     if p.returncode != 0:
         valid_host = False
         msg = "Can't do ssh"
-    if valid_host and use_sudo_password:
-        cmd = 'cat>{} && chmod 700 {}'.format(passwd_script, passwd_script)
-        cmd = '{} -v {} /bin/sh -c {}'.format(ssh_cmd, h, shlex.quote(cmd))
+    if valid_host and ctx.use_sudo_password:
+        cmd = 'cat>{} && chmod 700 {}'.format(ctx.passwd_script, ctx.passwd_script)
+        cmd = '{} -v {} /bin/sh -c {}'.format(ctx.ssh_cmd, host, shlex.quote(cmd))
         cmd = cmd_template.format(cmd)
-        LOG.debug('Install password script:\n{} | {}'.format(passwd_code, cmd))
-        p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, input=passwd_code)
+        LOG.debug('Install password script:\n{} | {}'.format(ctx.passwd_code, cmd))
+        p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, input=ctx.passwd_code)
         if p.returncode != 0:
             valid_host = False
             msg = "Can't copy password script"
     if valid_host:
-        cmd = '{} -v {} {} true'.format(ssh_cmd, h , sudo_cmd)
+        cmd = '{} -v {} {} true'.format(ctx.ssh_cmd, host , ctx.sudo_cmd)
         cmd = cmd_template.format(cmd)
         LOG.debug('Sudo:\n{}'.format(cmd))
         p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
