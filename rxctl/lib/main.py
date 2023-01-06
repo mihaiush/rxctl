@@ -270,6 +270,8 @@ def worker(host, task_list, ctx):
 
     os.environ['RX_HOST'] = host
     LOG.set_label(host)
+    LOG.info(click.style('START', reverse=True))
+
     if ctx.parallel:
         llabel = host
     else:
@@ -300,10 +302,12 @@ def worker(host, task_list, ctx):
     
     if rc != 0:
         if ctx.parallel or ctx.warning_only:
-            LOG.warning('Task terminated with error')
+            LOG.warning(click.style('Task terminated with error', reverse=True))
         else:
             LOG.error('Task terminated with error, aborting')
             sys.exit(1)
+    else:
+        LOG.info(click.style('OK', reverse=True))
 
 def check(host, ctx):
     cmd_template = 'set -x ; LOG=$(mktemp -p /tmp rx-XXXXXXXX) ; exec 3>&1 4>&2 1>$LOG 2>&1 ; {} ; RC=$? ; exec 1>&3 2>&4 ; cat $LOG ; rm -fv $LOG ; exit $RC'
