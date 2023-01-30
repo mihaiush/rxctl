@@ -90,9 +90,9 @@ DELAY - initial delay
 ```
 ### __ansible
 Run ansible module.
-It requires ansible, instalation directoty should be passed to rxctl with set-env, e.g.:
+It requires ansible, instalation directoty should be passed to rxctl with *set-env*, e.g.:
 ```
---set-env RX_ANSIBLE=/usr/lib/python3/dist-packages/ansible
+rxctl --set-env RX_ANSIBLE=/usr/lib/python3/dist-packages/ansible
 ```
 Invocation:
 ```
@@ -105,7 +105,7 @@ __ansible.SERVICE [SERVICE_NAME] [--PARAM1=VAL1] [--PARAM2=VAL2]
 __ansible.SETUP [SUBSET] [--PARAM1=VAL1] [--PARAM2=VAL2]
 ```
 or 
-Return one fact from subset distribution,pkg_mgr,service_mgr,virtual
+Return one fact from subset *distribution,pkg_mgr,service_mgr,virtual*:
 ```
 __ansible.fact FACT
 ```
