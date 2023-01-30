@@ -89,7 +89,7 @@ STEP - interval to run check
 DELAY - initial delay
 ```
 ### __ansible
-Run ansible module 
+Run ansible module.
 It requires ansible, instalation directoty should be passed to rxctl with set-env, e.g.:
 ```
 --set-env RX_ANSIBLE=/usr/lib/python3/dist-packages/ansible
