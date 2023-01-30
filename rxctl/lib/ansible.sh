@@ -88,7 +88,7 @@ check(){
 module(){
     MODULE=$1
     shift
-    __log.info __ansible: module : $MODULE $@
+    __log.info __ansible: module: $MODULE $@
     ARGS="$(args2json $@)"
     __log.debug __ansible: module raw: $MODULE $ARGS
     R=$(__run "cd ~/.cache/rx ; python3 -m ansible.modules.${MODULE} ${ARGS}" || true)

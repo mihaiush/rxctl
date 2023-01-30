@@ -51,8 +51,61 @@ The environment script (default ```./environment```) is used to overwrite rxctl 
 
 ## Helper tools
 ### __init
+Makes an arbitrary script a task
+```
+. __init <<EOF
+Short help (rxctl -l)
+
+Long help (rxctl -t TASK)
+EOF
+```
 ### __run
+Run a remote command
+```
+__run 'COMMAND1 ; COMMAND2 ; ...'
+```
+or
+```
+__run <<EOF
+COMMAND1
+COMMAND2
+EOF
+```
 ### __get, __put
+Copy files from/to remote host
 ### __log
+Log message
+```
+__log.LEVEL MESSAGE
+```
 ### __wait
+Wait for an event to happen
+```
+__wait ACTION CHECK TIMEOUT STEP DELAY
+ACTION - a label to display in log messages
+CHECK - command executed to check the status, if rc 0 exit wait
+TIMEOUT - max wait in seconds
+STEP - interval to run check
+DELAY - initial delay
+```
 ### __ansible
+Run ansible module 
+It requires ansible, instalation directoty should be passed to rxctl with set-env, e.g.:
+```
+--set-env RX_ANSIBLE=/usr/lib/python3/dist-packages/ansible
+```
+Invocation:
+```
+__ansible MODULE [--PARAM1=VAL1] [--PARAM2=VAL2]
+```
+or
+```
+__ansible.PACKAGE [PACKAGE_NAME] [--PARAM1=VAL1] [--PARAM2=VAL2]
+__ansible.SERVICE [SERVICE_NAME] [--PARAM1=VAL1] [--PARAM2=VAL2]
+__ansible.SETUP [SUBSET] [--PARAM1=VAL1] [--PARAM2=VAL2]
+```
+or 
+Return one fact from subset distribution,pkg_mgr,service_mgr,virtual
+```
+__ansible.fact FACT
+```
