@@ -9,7 +9,7 @@ import os
 import click
 
 
-def get_environment(env, cmd, selector=''):
+def get_environment(env, cmd, selector=None):
     LOG.debug("get_environment: env='{}', cmd='{}', selector='{}'".format(env, cmd, selector))
     if not os.path.isfile(env):
         LOG.warning("'{}' missing".format(env))
@@ -17,12 +17,12 @@ def get_environment(env, cmd, selector=''):
     if not os.access(env, os.X_OK):
         LOG.warning("'{}' not executable".format(env))
         return
-    if cmd == 'inventory':
-        cmd = '{} {}'.format(cmd, selector)
+    if cmd == 'inventory' and selector:
+        cmd = "{} '{}'".format(cmd, selector)
     LOG.info('Get {} from {}'.format(cmd, env))
     p = subprocess.run('{} {}'.format(env, cmd), capture_output=True, shell=True, encoding='utf-8', errors='ignore')
     LOG.debug("get_environment: out:\n{}".format(p.stdout))
-    if cmd == 'inventory ':
+    if cmd == 'inventory':
         data1 = p.stdout.strip()
     else:
         try:
