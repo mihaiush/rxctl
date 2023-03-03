@@ -104,8 +104,7 @@ __ansible.PACKAGE [PACKAGE_NAME] [--PARAM1=VAL1] [--PARAM2=VAL2]
 __ansible.SERVICE [SERVICE_NAME] [--PARAM1=VAL1] [--PARAM2=VAL2]
 __ansible.SETUP [SUBSET] [--PARAM1=VAL1] [--PARAM2=VAL2]
 ```
-or 
-Return one fact from subset *distribution,pkg_mgr,service_mgr,virtual*:
+or return one fact from subset *distribution,pkg_mgr,service_mgr,virtual*:
 ```
 __ansible.fact FACT
 ```
