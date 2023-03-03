@@ -286,7 +286,7 @@ def worker(host, task_list, ctx):
                 LOG.warning(msg)
             else:
                 LOG.error(msg)
-                sys.exit(1)
+                #sys.exit(1)
     else:
         valid_host = True
 
@@ -301,10 +301,10 @@ def worker(host, task_list, ctx):
                     break
     
     if rc != 0:
-        if ctx.parallel or ctx.warning_only:
+        if ctx.parallel: #or ctx.warning_only:
             LOG.warning(click.style('Task terminated with error', reverse=True))
         else:
-            LOG.error('Task terminated with error, aborting')
+            LOG.error(click.style('Task terminated with error, aborting', reverse=True))
             sys.exit(1)
     else:
         LOG.info(click.style('OK', reverse=True))
@@ -312,7 +312,7 @@ def worker(host, task_list, ctx):
 def check(host, ctx):
     cmd_template = 'set -x ; LOG=$(mktemp -p /tmp rx-XXXXXXXX) ; exec 3>&1 4>&2 1>$LOG 2>&1 ; {} ; RC=$? ; exec 1>&3 2>&4 ; cat $LOG ; rm -fv $LOG ; exit $RC'
     valid_host = True
-    cmd = '{} -v {} true'.format(ctx.ssh_cmd, host, host)
+    cmd = '{} -v {} true'.format(ctx.ssh_cmd, host)
     cmd = cmd_template.format(cmd)
     LOG.debug('SSH:\n{}'.format(cmd))
     p = subprocess.run(cmd, shell=True, encoding='utf-8', errors='ignore', bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL) #stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
