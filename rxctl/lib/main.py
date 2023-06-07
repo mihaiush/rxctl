@@ -384,9 +384,9 @@ def worker(host, task_list, ctx):
 
 
 def check(host, ctx):
-    cmd_template = 'set -x ; LOG=$(mktemp -p /tmp rx-XXXXXXXX) ; \
-        exec 3>&1 4>&2 1>$LOG 2>&1 ; {} ; RC=$? ; exec 1>&3 2>&4 ; \
-        cat $LOG ; rm -fv $LOG ; exit $RC'
+    cmd_template = 'set -x ; LOG=$(mktemp -p /tmp rx-XXXXXXXX) ;' \
+        'exec 3>&1 4>&2 1>$LOG 2>&1 ; {} ; RC=$? ; exec 1>&3 2>&4 ;' \
+        'cat $LOG ; rm -fv $LOG ; exit $RC'
     valid_host = True
     cmd = '{} -v {} true'.format(ctx.ssh_cmd, host)
     cmd = cmd_template.format(cmd)
