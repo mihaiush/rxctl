@@ -1,0 +1,3 @@
+[flake8]
+ignore = DUO116,F403,F405
+exclude = .git,__pycache__

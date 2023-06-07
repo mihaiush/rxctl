@@ -14,17 +14,19 @@ def save():
             t = os.readlink(real_f)
             data.append([f, t])
     data = json.dumps(data)
-    open(DB, 'w').write(data)
+    with open(DB, 'w') as f:
+        f.write(data)
 
 
 def restore():
     if os.path.isfile(DB):
-        data = json.loads(open(DB, 'r').read())
+        with open(DB, 'r') as f:
+            data = json.loads(f.read())
         for d in data:
-            l = '{}/{}'.format(BIN, d[0])
-            if not os.path.isfile(l):
-                os.symlink(d[1], l)       
+            lnk = '{}/{}'.format(BIN, d[0])
+            if not os.path.isfile(lnk):
+                os.symlink(d[1], lnk)
 
-        
+
 if __name__ == '__main__':
     save()

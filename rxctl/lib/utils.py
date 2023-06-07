@@ -10,7 +10,8 @@ import click
 
 
 def get_environment(env, cmd, selector=None):
-    LOG.debug("get_environment: env='{}', cmd='{}', selector='{}'".format(env, cmd, selector))
+    LOG.debug("get_environment: env='{}', cmd='{}', selector='{}'".format(
+        env, cmd, selector))
     if not os.path.isfile(env):
         LOG.warning("'{}' missing".format(env))
         return
@@ -20,26 +21,28 @@ def get_environment(env, cmd, selector=None):
     if cmd == 'inventory' and selector:
         cmd = "{} '{}'".format(cmd, selector)
     LOG.info('Get {} from {}'.format(cmd, env))
-    p = subprocess.run('{} {}'.format(env, cmd), capture_output=True, shell=True, encoding='utf-8', errors='ignore')
+    p = subprocess.run('{} {}'.format(env, cmd), capture_output=True,
+                       shell=True, encoding='utf-8', errors='ignore')
     LOG.debug("get_environment: out:\n{}".format(p.stdout))
     if cmd == 'inventory':
         data1 = p.stdout.strip()
     else:
         try:
             data1 = json.loads(p.stdout)
-        except:
+        except Exception:
             LOG.error("{} {} didn't return a valid json".format(env, cmd))
             sys.exit(1)
     if cmd == 'config':
         data2 = {}
-        for k,v in data1.items():
-            data2[k.replace('-','_')] = v
+        for k, v in data1.items():
+            data2[k.replace('-', '_')] = v
         return data2
     return data1
 
 
 def check_task(t):
-    c = subprocess.run('{} __name__'.format(t), shell=True, encoding='utf-8', errors='ignore', bufsize=0, capture_output=True)
+    c = subprocess.run('{} __name__'.format(t), shell=True, encoding='utf-8',
+                       errors='ignore', bufsize=0, capture_output=True)
     if c.stdout.strip() == t:
         return True
     return False
@@ -60,7 +63,8 @@ def get_tasks():
 
 
 def task_doc(task, short=False):
-    p = subprocess.run(task, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8', errors='ignore')
+    p = subprocess.run(task, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                       encoding='utf-8', errors='ignore')
     if short:
         if p.returncode == 0:
             h = p.stdout.split('\n')
@@ -70,4 +74,3 @@ def task_doc(task, short=False):
     else:
         h = p.stdout
     return h
-

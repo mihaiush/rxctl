@@ -5,6 +5,7 @@ import sys
 import click
 import os
 
+
 class CustomFormatter(logging.Formatter):
 
     colors = {
@@ -16,7 +17,6 @@ class CustomFormatter(logging.Formatter):
         logging.CRITICAL: 'red'
     }
 
-    
     level = logging.INFO
     prompt = '-->'
 
@@ -38,7 +38,7 @@ class CustomFormatter(logging.Formatter):
             msg1 = ''
         # Colorize only first line off message
         record.msg = '{}{}'.format(click.style(msg0, fg=c), msg1)
-        
+
         # Timestamp if debug enabled
         if self.level == logging.DEBUG:
             ts = click.style(' %(asctime)s', fg=c)
@@ -50,10 +50,11 @@ class CustomFormatter(logging.Formatter):
             label = self.label
         else:
             label = '[{}]'.format(click.style(self.label, fg=c))
-        
+
         log_fmt = '{}{} {}: %(message)s'.format(label, ts, level)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
+
 
 class Logger(logging.Logger):
     def __init__(self, name):
@@ -74,10 +75,12 @@ class Logger(logging.Logger):
     def set_label(self, label=None):
         self.fmt.set_label(label)
 
+
 logging.setLoggerClass(Logger)
 LOG = logging.getLogger(__name__)
 
-if 'RX_LOG_VERBOSITY' in os.environ and int(os.environ['RX_LOG_VERBOSITY']) > 0:
+if 'RX_LOG_VERBOSITY' in os.environ \
+        and int(os.environ['RX_LOG_VERBOSITY']) > 0:
     LOG.enable_debug()
 
 if 'RX_HOST' in os.environ:
@@ -106,11 +109,12 @@ if __name__ == '__main__':
         level = sys.argv[1]
         msg = ' '.join(sys.argv[2:])
     else:
-        print('{} {} message'.format(os.path.basename(__file__), '|'.join(levelmap.keys()))) 
+        print('{} {} message'.format(
+            os.path.basename(__file__), '|'.join(levelmap.keys())
+        ))
         sys.exit(2)
 
     LOG.log(levelmap[level], msg)
 
     if level == 'error':
         sys.exit(1)
- 

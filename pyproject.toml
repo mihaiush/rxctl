@@ -16,7 +16,7 @@ generate-setup-file = false
 script = "./rxctl/lib/links.py"
 
 [tool.poetry.scripts]
-rxctl = "rxctl:cli"
+rxctl = "rxctl.lib.main:cli"
 
 [tool.poetry-dynamic-versioning]
 enable = true
