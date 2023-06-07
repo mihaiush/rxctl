@@ -1,0 +1,37 @@
+on: [push]
+
+env:
+  PYTHON_VERSION: '3.7'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 flake8-bugbear flake8_simplify
+    - name: Flake8
+      run: |
+        flake8 -v
+  build:
+    needs: [lint]
+    if: needs.lint.result == 'success' && contains(github.ref, '/tags/') && startsWith(github.ref_name, 'v')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install poetry poetry-dynamic-versioning-plugin
+    - name: Build
+      run: |
+        poetry build
+
