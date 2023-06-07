@@ -25,9 +25,10 @@ Options:
                           -o ConnectTimeout=1]
   --password-envvar TEXT  Environment variable used to pass password to sudo
                           [default: LC_PASSWD]
-  -u, --user TEXT         SSH user  [default: current user]
-  -P, --parallel INTEGER  How many threads to use to run hosts in parallel
-                          [default: 1]
+  -u, --user TEXT         SSH user  [default: mcraiu]
+  -P, --parallel          Run hosts in parallel
+  --max-parallel INTEGER  How many threads to use to run hosts in parallel, 0
+                          - run everithing in parralel  [default: 0]
   -A, --ad-hoc            Task list is a remote ad-hoc command
   -I, --inventory         Show environment inventory
   -c, --check-only        Show valid inventory
@@ -37,9 +38,12 @@ Options:
                           inventory
   -x, --exclude TEXT      Comma separated list of host to exclude from
                           inventory (can be used multiple times)
+  -i, --inline-check      Don't check hosts before tasks, do it for each host
+                          at the begining of the task list
   --set-env TEXT          Set environment variable (can be used multiple
                           times)
   -v, --verbosity         Verbosity level, up to 3
+  -V, --version           Show the version and exit.
   --help                  Show this message and exit.
 ```
 
