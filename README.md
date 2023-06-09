@@ -28,9 +28,10 @@ Options:
   -u, --user TEXT         SSH user  [default: mcraiu]
   -P, --parallel          Run hosts in parallel
   --max-parallel INTEGER  How many threads to use to run hosts in parallel, 0
-                          - run everithing in parralel  [default: 0]
+                          - run everything in parralel  [default: 0]
   -A, --ad-hoc            Task list is a remote ad-hoc command
-  -I, --inventory         Show environment inventory
+  -I, --inventory         With -S shows the list of hosts, by itself shows the
+                          inventory summary.
   -c, --check-only        Show valid inventory
   -l, --task-list         List tasks in local directory
   -t, --task-help TEXT    Show help for a task

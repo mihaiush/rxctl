@@ -58,11 +58,12 @@ def get_config(ctx, param, value):
               help='Run hosts in parallel')
 @click.option('--max-parallel', default=0, show_default=True,
               help='How many threads to use to run hosts in parallel,'
-              ' 0 - run everithing in parralel')
+              ' 0 - run everything in parralel')
 @click.option('-A', '--ad-hoc', default=False, is_flag=True,
               help='Task list is a remote ad-hoc command')
 @click.option('-I', '--inventory', default=False, is_flag=True,
-              help='Show environment inventory')
+              help='With -S shows the list of hosts,'
+              ' by itself shows the inventory summary.')
 @click.option('-c', '--check-only', default=False, is_flag=True,
               help='Show valid inventory')
 @click.option('-l', '--task-list', default=False, is_flag=True,
