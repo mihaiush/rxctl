@@ -16,7 +16,7 @@ jobs:
       run: |
         flake8 -v
   build:
-    if: ${{ jobs.lint.result == "success" }}
+    if: jobs.lint.result == 'success'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
