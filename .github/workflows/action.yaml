@@ -34,4 +34,19 @@ jobs:
     - name: Build
       run: |
         poetry build
+    - name: Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_URL: ${{ github.server_url	}}
+        GITHUB_REPO: ${{ github.repository }}
+        GITHUB_TAG: ${{ github.ref_name }}      
+      run: |
+        RELEASE_MESSAGE=$(git tag | tail -2 | paste -sd '*' | sed -r 's/\*/.../')
+        RELEASE_MESSAGE="**Full Changelog**: ${GITHUB_URL}/${GITHUB_REPO}/compare/${RELEASE_MESSAGE}"
+        echo $GITHUB_TAG >.message
+        echo "" >>.message
+        echo "${RELEASE_MESSAGE}" >>.message
+        hub release create -a $(find dist -name '*.tar.gz') -a $(find dist -name '*.whl') -F .message $GITHUB_TAG
+        
+        
 
