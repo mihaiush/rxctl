@@ -13,10 +13,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 flake8-bugbear flake8_simplify
     - name: Flake8
+      id: flake8
       run: |
         flake8 -v
   build:
-    if: jobs.lint.result == 'success'
+    if: steps.flake8.outcome == 'success'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
