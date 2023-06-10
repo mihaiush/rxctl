@@ -20,7 +20,7 @@ jobs:
         flake8 -v
   build:
     needs: [lint]
-    if: needs.lint.result == 'success' && contains(github.ref, '/tags/') && startWith(github.ref_name,'v')
+    if: needs.lint.result == 'success' && contains(github.ref, '/tags/') && startsWith(github.ref_name, 'v')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
