@@ -1,5 +1,8 @@
 on: [push]
 
+evn:
+  PYTHON_VERSION: '3.7'
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -7,7 +10,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v3
       with:
-        python-version: "3.7"
+        python-version: ${{ env.PYTHON_VERSION }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -17,13 +20,13 @@ jobs:
         flake8 -v
   build:
     needs: [lint]
-    if: needs.lint.result == 'success'
+    if: needs.lint.result == 'success' && contains(github.ref, '/tags/') && startWith(github.ref_name,'v')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v3
       with:
-        python-version: "3.7"
+        python-version: ${{ env.PYTHON_VERSION }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
