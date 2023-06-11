@@ -33,6 +33,6 @@ if [ $TIMEOUT -le 0 ] ; then
     __log.error "Can't check if ${ACTION} OK after ${T} sec"
     exit 1
 else
-    __log.info "${ACTION^} OK"
+    __log.info "${ACTION} OK"
     exit 0
 fi
