@@ -25,7 +25,7 @@ Options:
                           -o ConnectTimeout=1]
   --password-envvar TEXT  Environment variable used to pass password to sudo
                           [default: LC_PASSWD]
-  -u, --user TEXT         SSH user  [default: mcraiu]
+  -u, --user TEXT         SSH user  [default: ***]
   -P, --parallel          Run hosts in parallel
   --max-parallel INTEGER  How many threads to use to run hosts in parallel, 0
                           - run everything in parralel  [default: 0]
