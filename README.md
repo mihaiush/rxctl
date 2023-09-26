@@ -105,9 +105,9 @@ __ansible MODULE [--PARAM1=VAL1] [--PARAM2=VAL2]
 ```
 or
 ```
-__ansible.PACKAGE [PACKAGE_NAME] [--PARAM1=VAL1] [--PARAM2=VAL2]
-__ansible.SERVICE [SERVICE_NAME] [--PARAM1=VAL1] [--PARAM2=VAL2]
-__ansible.SETUP [SUBSET] [--PARAM1=VAL1] [--PARAM2=VAL2]
+__ansible.package [PACKAGE_NAME] [--PARAM1=VAL1] [--PARAM2=VAL2]
+__ansible.service [SERVICE_NAME] [--PARAM1=VAL1] [--PARAM2=VAL2]
+__ansible.setup [SUBSET] [--PARAM1=VAL1] [--PARAM2=VAL2]
 ```
 or return one fact from subset *distribution,pkg_mgr,service_mgr,virtual*:
 ```
