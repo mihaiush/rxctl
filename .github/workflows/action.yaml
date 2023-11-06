@@ -37,16 +37,11 @@ jobs:
     - name: Release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GITHUB_URL: ${{ github.server_url	}}
-        GITHUB_REPO: ${{ github.repository }}
+        #GITHUB_URL: ${{ github.server_url	}}
+        #GITHUB_REPO: ${{ github.repository }}
         GITHUB_TAG: ${{ github.ref_name }}      
       run: |
-        RELEASE_MESSAGE=$(hub release -L 1)
-        RELEASE_MESSAGE="**Full Changelog**: ${GITHUB_URL}/${GITHUB_REPO}/compare/${RELEASE_MESSAGE}...${GITHUB_TAG}"
-        echo $GITHUB_TAG >.message
-        echo "" >>.message
-        echo "${RELEASE_MESSAGE}" >>.message
-        hub release create -a $(find dist -name '*.tar.gz') -a $(find dist -name '*.whl') -F .message $GITHUB_TAG
+        gh release create $GITHUB_TAG $(find dist -name '*.tar.gz') $(find dist -name '*.whl') --generate-notes --latest --verify-tag
     - name: Publish
       env:
         PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
