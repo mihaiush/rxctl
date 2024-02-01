@@ -113,3 +113,5 @@ or return one fact from subset *distribution,pkg_mgr,service_mgr,virtual*:
 ```
 __ansible.fact FACT
 ```
+
+
