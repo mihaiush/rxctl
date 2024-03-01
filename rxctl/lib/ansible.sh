@@ -20,10 +20,7 @@ EOF
 }
 
 bootstrap(){
-    if ! __run python3 -V >/dev/null 2>&1 ; then
-        __log.error __ansible: bootstrap: Python3 not available
-        exit 1
-    fi
+    __run python3 -V >/dev/null 2>&1 || __run python3 -V >/dev/null 2>&1 || __run python3 -V >/dev/null 2>&1 || (__log.error __ansible: bootstrap: Python3 not available ; exit 1)
     CDIR=$(pwd)
     cd $(dirname $RX_ANSIBLE)
     LAV=$(python3 -c "from ansible.release import __version__ ; print(__version__)")
