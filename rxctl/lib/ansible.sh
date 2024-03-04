@@ -144,6 +144,19 @@ case $CMD in
             module $MGR "$@" | jq 'del(.status)'
         fi
     ;;
+    dpkg_selections)
+        __log.debug __ansible: cmd: dpkg_selections
+        MOD_ARGS=""
+        if check "$1" ; then
+            MOD_ARGS="${MOD_ARGS} --name='$1'"
+            shift
+        fi
+        if check "$1" ; then
+            MOD_ARGS="${MOD_ARGS} --selection='$1'"
+            shift
+        fi
+        module dpkg_selections ${MOD_ARGS} "$@"
+    ;;
     *)
         module "$@"
     ;;
