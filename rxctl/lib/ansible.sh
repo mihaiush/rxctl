@@ -63,13 +63,13 @@ fact(){
 
 args2json(){
     __log.debug __ansible: args2json: raw: $@
-    ARGS='{\"ANSIBLE_MODULE_ARGS\":{'
+    ARGS='{"ANSIBLE_MODULE_ARGS":{'
     STRIP=0
     for A in $@ ; do
         echo $A | grep -qE '^--[^ =]+=[^=]+$' || __log.error __ansible: args2json: Invalid argument: $A
         STRIP=1
         read K V < <(echo $A | sed -r 's/^--(.+)=(.+)$/\1 \2/g')
-        ARGS=${ARGS}'\"'$K'\"':'\"'$V'\",'
+        ARGS=${ARGS}'"'$K'"':'"'$V'",'
     done
     if [ $STRIP -eq 1 ] ; then 
         ARGS=${ARGS::-1}
@@ -89,7 +89,11 @@ module(){
     __log.info __ansible: module: $MODULE $@
     ARGS="$(args2json $@)"
     __log.debug __ansible: module raw: $MODULE $ARGS
-    R=$(__run "cd ~/.cache/rx ; python3 -m ansible.modules.${MODULE} ${ARGS}" || true)
+    R=$(__run <<EOF 
+cd ~/.cache/rx 
+python3 -m ansible.modules.${MODULE} '${ARGS}' 
+EOF
+) || true
     FAILED=$(echo $R | jq -r '.failed')
     if [ "${FAILED}" = "true" ] ; then
         __log.error "$(echo $R | jq -r '.msg')"

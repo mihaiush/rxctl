@@ -76,6 +76,11 @@ COMMAND1
 COMMAND2
 EOF
 ```
+Second form works better most of the time unless you need something like:
+```
+echo $VAR | __run 'cat >/tmp/var'
+```
+(a command which reads from stdin)
 ### __get, __put
 Copy files from/to remote host
 ### __log
