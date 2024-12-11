@@ -272,10 +272,11 @@ def cli(cc,
                         LOG.error(msg)
                         sys.exit(1)
                     invalid_hosts.append(h)
-                    INVENTORY.remove(h)
         LOG.set_label()
         if len(invalid_hosts) > 0:
             LOG.warning('Remove from inventory:\n{}'.format(invalid_hosts))
+            for h in invalid_hosts:
+                INVENTORY.remove(h)
         LOG.info('Valid inventory:\n{}'.format(INVENTORY))
     if check_only:
         sys.exit()
