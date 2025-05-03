@@ -1,5 +1,7 @@
 # Local
 sync.sh
+#poetry.lock
+#links.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
