@@ -18,6 +18,9 @@ script = "./rxctl/lib/links.py"
 [tool.poetry.scripts]
 rxctl = "rxctl.lib.main:cli"
 
+[tool.poetry.requires-plugins]
+poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
+
 [tool.poetry-dynamic-versioning]
 enable = true
 
