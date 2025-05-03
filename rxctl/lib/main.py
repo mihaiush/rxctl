@@ -52,7 +52,8 @@ def get_config(ctx, param, value):
               show_default=True, help='SSH options')
 @click.option('--password-envvar', default='LC_PASSWD', show_default=True,
               help='Environment variable used to pass password to sudo')
-@click.option('-u', '--user', default=os.environ.get('USER'), show_default=True,
+@click.option('-u', '--user', default=os.environ.get('USER'),
+              show_default=True,
               help='SSH user')
 @click.option('-P', '--parallel', default=False, is_flag=True,
               help='Run hosts in parallel')
