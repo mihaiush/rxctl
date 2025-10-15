@@ -66,9 +66,9 @@ args2json(){
     ARGS='{"ANSIBLE_MODULE_ARGS":{'
     STRIP=0
     for A in $@ ; do
-        echo $A | grep -qE '^--[^ =]+=[^=]+$' || __log.error __ansible: args2json: Invalid argument: $A
+        echo $A | grep -qE '^--[^ =]+=.+$' || __log.error __ansible: args2json: Invalid argument: $A
         STRIP=1
-        read K V < <(echo $A | sed -r 's/^--(.+)=(.+)$/\1 \2/g')
+        read K V < <(echo $A | sed -r 's/^--([^ =]+)=(.+)$/\1 \2/g')
         ARGS=${ARGS}'"'$K'"':'"'$V'",'
     done
     if [ $STRIP -eq 1 ] ; then 
