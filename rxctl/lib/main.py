@@ -25,7 +25,9 @@ def get_config(ctx, param, value):
 
 
 @click.command(
+    epilog='See https://github.com/mihaiush/rxctl for more details',
     context_settings=dict(
+        help_option_names=['-h', '--help'],
         ignore_unknown_options=True,
         allow_interspersed_args=False
     ),
@@ -145,7 +147,7 @@ def cli(cc,
             not (task_list or task_help or inventory):
         LOG.error('At least one of'
                   ' -l, -t, -I, -H, -S, -V'
-                  ' or --help must be specified.')
+                  ' or -h must be specified.')
         sys.exit(1)
 
     # Set path
