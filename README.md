@@ -13,39 +13,40 @@ The tool itself is not involved in the remote code execution in any way, its job
 rxctl [OPTIONS] [TASKS]...
 
 Options:
-  -E, --environment PATH  Script to generate environment (config & inventory)
-                          [default: ./environment]
-  -H, --host TEXT         Comma separated list of host (can be used multiple
-                          times)
-  -S, --selector TEXT     Inventory selector (can be used multiple times)
-  --use-ssh-password      Ask for ssh password
-  --use-sudo-password     Ask for sudo password
-  --ssh-opt TEXT          SSH options  [default: -o ControlMaster=auto -o
-                          ControlPath=/dev/shm/rx-ssh-%h -o ControlPersist=5m
-                          -o ConnectTimeout=1]
-  --password-envvar TEXT  Environment variable used to pass password to sudo
-                          [default: LC_PASSWD]
-  -u, --user TEXT         SSH user  [default: ***]
-  -P, --parallel          Run hosts in parallel
-  --max-parallel INTEGER  How many threads to use to run hosts in parallel, 0
-                          - run everything in parralel  [default: 0]
-  -A, --ad-hoc            Task list is a remote ad-hoc command
-  -I, --inventory         With -S shows the list of hosts, by itself shows the
-                          inventory summary.
-  -c, --check-only        Show valid inventory
-  -l, --task-list         List tasks in local directory
-  -t, --task-help TEXT    Show help for a task
-  -w, --warning-only      Don't exit if a host fails check, evict host from
-                          inventory
-  -x, --exclude TEXT      Comma separated list of host to exclude from
-                          inventory (can be used multiple times)
-  -i, --inline-check      Don't check hosts before tasks, do it for each host
-                          at the begining of the task list
-  --set-env TEXT          Set environment variable (can be used multiple
-                          times)
-  -v, --verbosity         Verbosity level, up to 3
-  -V, --version           Show the version and exit.
-  --help                  Show this message and exit.
+  -E, --environment PATH       Script to generate environment (config &
+                               inventory)  [default: ./environment]
+  -H, --host TEXT              Comma separated list of hosts (can be used
+                               multiple times)
+  -S, --selector TEXT          Inventory selector (can be used multiple times)
+  --use-ssh-password           Ask for ssh password
+  --use-sudo-password          Ask for sudo password
+  --ssh-opt TEXT               SSH options  [default: -o ControlMaster=auto -o
+                               ControlPath=/dev/shm/rx-ssh-%h -o
+                               ControlPersist=5m -o ConnectTimeout=1]
+  --password-envvar TEXT       Environment variable used to pass password to
+                               sudo  [default: LC_PASSWD]
+  -u, --user TEXT              SSH user  [default: mcraiu]
+  -P, --parallel               Run hosts in parallel
+  --max-parallel INTEGER       How many threads to use to run hosts in
+                               parallel, 0 - run everything in parralel
+                               [default: 0]
+  -A, --ad-hoc                 Task list is a remote ad-hoc command
+  -I, --inventory              Show inventory
+  -s, --sort [none|alpha|num]  Sort inventory  [default: none]
+  -c, --check-only             Show valid inventory
+  -l, --task-list              List tasks in local directory
+  -t, --task-help TEXT         Show help for a task
+  -w, --warning-only           Don't exit if a host fails check, evict host
+                               from inventory
+  -x, --exclude TEXT           Comma separated list of host to exclude from
+                               inventory (can be used multiple times)
+  -i, --inline-check           Don't check hosts before tasks, do it for each
+                               host at the begining of the task list
+  --set-env TEXT               Set environment variable (can be used multiple
+                               times)
+  -v, --verbosity              Verbosity level, up to 3
+  -V, --version                Show the version and exit.
+  --help                       Show this message and exit.
 ```
 
 ## Environment script
