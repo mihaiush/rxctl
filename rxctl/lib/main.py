@@ -9,11 +9,14 @@ import os
 import subprocess
 import getpass
 import shlex
+import re
 from multiprocessing import Pool
 from types import SimpleNamespace
 
 from prettytable import PrettyTable
 import click
+
+RE_NONUM = re.compile(r'[^0-9]')
 
 
 def get_config(ctx, param, value):
@@ -37,7 +40,8 @@ def get_config(ctx, param, value):
     is_eager=True
 )
 @click.option('-H', '--host', default=[],
-              help='Comma separated list of host (can be used multiple times)',
+              help='Comma separated list of hosts'
+              ' (can be used multiple times)',
               multiple=True)
 @click.option('-S', '--selector', default=[],
               help='Inventory selector (can be used multiple times)',
@@ -63,8 +67,11 @@ def get_config(ctx, param, value):
 @click.option('-A', '--ad-hoc', default=False, is_flag=True,
               help='Task list is a remote ad-hoc command')
 @click.option('-I', '--inventory', default=False, is_flag=True,
-              help='With -S shows the list of hosts,'
-              ' by itself shows the inventory summary.')
+              help='Show inventory')
+@click.option('-s', '--sort', default='none', show_default=True,
+              type=click.Choice(('none', 'alpha', 'num'),
+                                case_sensitive=False),
+              help='Sort inventory')
 @click.option('-c', '--check-only', default=False, is_flag=True,
               help='Show valid inventory')
 @click.option('-l', '--task-list', default=False, is_flag=True,
@@ -102,6 +109,7 @@ def cli(cc,
         max_parallel,
         ad_hoc,
         inventory,
+        sort,
         check_only,
         task_list,
         task_help,
@@ -167,10 +175,10 @@ def cli(cc,
         sys.exit()
 
     # Inventory summary
-    if inventory and not selector:
-        LOG.info('Inventory summary:\n{}'.format(
-            get_environment(environment, 'inventory')))
-        sys.exit()
+    if inventory and (not host) and (not selector):
+        s = get_environment(environment, 'inventory')
+        if s:
+            LOG.info('Inventory summary:\n{}'.format(s))
 
     # Check arguments - 2
     if not (inventory or check_only) and len(tasks) == 0:
@@ -195,6 +203,26 @@ def cli(cc,
             if x in INVENTORY:
                 LOG.debug("Remove '{}' from inventory".format(x))
                 INVENTORY.remove(x)
+    if sort == 'aplha':
+        INVENTORY.sort()
+    elif sort == 'num':
+        n_inventory = {}
+        for i in INVENTORY:
+            x = RE_NONUM.sub('', i)
+            if x == '':
+                x = -1
+            else:
+                x = int(x)
+            if x not in n_inventory:
+                n_inventory[x] = []
+            n_inventory[x].append(i)
+        k = list(n_inventory.keys())
+        k.sort()
+        INVENTORY = []
+        for x in k:
+            y = n_inventory[x]
+            y.sort()
+            INVENTORY = INVENTORY + y
 
     # Show inventory
     if inventory:
