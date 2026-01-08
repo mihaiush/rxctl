@@ -49,6 +49,7 @@ EOF
         cd ~/.cache/rx
         rm -rf ansible
         tar -xzf /tmp/ansible.tar.gz
+        touch ansible/__init__.py
 EOF
     fi   
     if do_facts ; then
