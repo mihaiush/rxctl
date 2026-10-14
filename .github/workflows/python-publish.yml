@@ -1,5 +1,7 @@
 name: Build and Publish Python Packages
 
+on: [push]
+
 jobs:
   call-python-publish:
     uses: mihaiush/ci/.github/workflows/python-publish.yml@main
